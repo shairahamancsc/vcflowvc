@@ -1,6 +1,6 @@
 'use client';
 
-import * from 'react';
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,

@@ -6,17 +6,19 @@ import { useAuth } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
 import { Button } from './ui/button';
-import { LayoutDashboard, Users, Wrench, ListChecks } from 'lucide-react';
+import { LayoutDashboard, Users, Wrench, ListChecks, FileText } from 'lucide-react';
 
 const adminNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/requests', label: 'Service Requests', icon: Wrench },
   { href: '/clients', label: 'Clients', icon: Users },
+  { href: '/notes', label: 'Notes', icon: FileText },
 ];
 
 const techNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/requests', label: 'My Tasks', icon: ListChecks },
+  { href: '/notes', label: 'Notes', icon: FileText },
 ];
 
 export function SidebarNav() {

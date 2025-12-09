@@ -1,3 +1,4 @@
+
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Suspense } from 'react';
@@ -80,7 +81,7 @@ export default async function Notes() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">The 'notes' page will fetch and display data from your Supabase 'notes' table once you've connected your project.</p>
-              </I</CardContent>
+              </CardContent>
             </Card>
           )
     }

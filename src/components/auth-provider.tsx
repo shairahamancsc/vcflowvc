@@ -1,50 +1,62 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import type { User } from '@/lib/types';
-import { users } from '@/lib/data';
+import type { User as AppUser } from '@/lib/types';
+import { users as mockUsers } from '@/lib/data';
+import { createClient } from '@/lib/supabase/client';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface AuthContextType {
-  user: User | null;
-  login: (role: 'admin' | 'technician') => void;
-  logout: () => void;
+  user: AppUser | null;
+  logout: () => Promise<void>;
   loading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const supabase = createClient();
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('serviceflow-user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        const appUser = mockUsers.find(u => u.email === session.user.email);
+        setUser(appUser || null);
       }
-    } catch (error) {
-      console.error('Failed to parse user from localStorage', error);
-      localStorage.removeItem('serviceflow-user');
-    }
-    setLoading(false);
-  }, []);
+      setLoading(false);
+    };
 
-  const login = (role: 'admin' | 'technician') => {
-    const userToLogin = users.find((u) => u.role === role);
-    if (userToLogin) {
-      setUser(userToLogin);
-      localStorage.setItem('serviceflow-user', JSON.stringify(userToLogin));
-    }
-  };
+    getSession();
 
-  const logout = () => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setLoading(true);
+        if (event === 'SIGNED_IN' && session?.user) {
+          const appUser = mockUsers.find(u => u.email === session.user.email);
+          setUser(appUser || null);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [supabase.auth]);
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('serviceflow-user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -13,17 +13,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/hooks';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
 import { LogOut } from 'lucide-react';
 
 export function UserNav() {
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
-    Cookies.remove('serviceflow-user-role');
+  const handleLogout = async () => {
+    await logout();
     router.push('/login');
+    router.refresh();
   };
 
   if (!user) {

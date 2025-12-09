@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { isSupabaseConfigured } from '@/lib/config';
 
 
 async function NotesList() {
@@ -68,9 +69,6 @@ function NotesSkeleton() {
 
 
 export default async function Notes() {
-    // This check handles the case where Supabase is not configured at all.
-    const isSupabaseConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'YOUR_SUPABASE_URL';
-
     if (!isSupabaseConfigured) {
         return (
             <Card>
@@ -82,7 +80,7 @@ export default async function Notes() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">The 'notes' page will fetch and display data from your Supabase 'notes' table once you've connected your project.</p>
-              </CardContent>
+              </I</CardContent>
             </Card>
           )
     }

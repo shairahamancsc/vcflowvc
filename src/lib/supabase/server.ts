@@ -1,13 +1,11 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { cookies } from "next/headers"
+import { isSupabaseConfigured } from "@/lib/config";
 
 export function createClient() {
   const cookieStore = cookies()
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   
-  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'YOUR_SUPABASE_URL') {
+  if (!isSupabaseConfigured) {
     // This function should ideally not be called if Supabase is not configured.
     // The middleware and components should guard against calling this.
     // However, to prevent a hard crash during build or initial render:
@@ -15,8 +13,8 @@ export function createClient() {
   }
 
   return createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {

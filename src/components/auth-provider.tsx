@@ -5,6 +5,7 @@ import type { User as AppUser } from '@/lib/types';
 import { users as mockUsers } from '@/lib/data';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
+import { isSupabaseConfigured } from '@/lib/config';
 
 export interface AuthContextType {
   user: AppUser | null;
@@ -14,8 +15,6 @@ export interface AuthContextType {
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const isSupabaseConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'YOUR_SUPABASE_URL';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);

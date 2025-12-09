@@ -13,10 +13,13 @@ import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
 import { users } from '@/lib/data';
 
+const isSupabaseConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'YOUR_SUPABASE_URL';
+
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const supabase = createClient();
+  const supabase = isSupabaseConfigured ? createClient() : null;
+  const { login: mockLogin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('password'); // Demo password
   const [loading, setLoading] = useState(false);
@@ -34,13 +37,14 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        throw error;
+      if (supabase) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+      } else {
+        await mockLogin(email);
       }
       
       toast({
@@ -48,14 +52,16 @@ export default function LoginPage() {
         description: 'Redirecting to your dashboard.',
       });
       router.push('/dashboard');
-      router.refresh(); // Refresh to ensure server components re-render with new auth state
+      // For mock auth, we need to refresh to reflect the user state change
+      if (!isSupabaseConfigured) router.refresh(); 
 
     } catch (error: any) {
       console.error('Login failed:', error);
-      setError(error.message || 'An unexpected error occurred.');
+      const errorMessage = error.message || 'An unexpected error occurred.';
+      setError(errorMessage);
       toast({
         title: 'Login Failed',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -104,25 +110,32 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                required 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            {isSupabaseConfigured && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  required 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button
               type="submit"
               className="w-full h-12 text-lg"
-              disabled={loading}
+              disabled={loading || !email}
             >
               {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : 'Login'}
             </Button>
           </form>
+           {!isSupabaseConfigured && (
+              <p className="mt-4 text-xs text-center text-muted-foreground p-2 rounded-md bg-muted">
+                Demo mode: Supabase is not configured. Using mock authentication.
+              </p>
+            )}
         </CardContent>
       </Card>
     </div>

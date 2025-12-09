@@ -1,32 +1,22 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
-const isInvalidSupabaseUrl = (url: string | undefined) => !url || url === 'YOUR_SUPABASE_URL' || !url.startsWith('http');
-
 export function createClient() {
   const cookieStore = cookies()
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (isInvalidSupabaseUrl(supabaseUrl) || !supabaseAnonKey) {
-     // Return a mock client if the credentials are not set
-    return {
-      auth: {
-        getSession: async () => ({ data: { session: null } }),
-        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-        signInWithPassword: async () => ({ error: { message: "Supabase not configured." } }),
-        signOut: async () => {},
-      },
-      from: () => ({
-        select: async () => ({ data: [], error: { message: "Supabase not configured."} }),
-      }),
-    } as any;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  
+  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'YOUR_SUPABASE_URL') {
+    // This function should ideally not be called if Supabase is not configured.
+    // The middleware and components should guard against calling this.
+    // However, to prevent a hard crash during build or initial render:
+    throw new Error('Server-side Supabase client creation attempted without proper configuration.');
   }
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {

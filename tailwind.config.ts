@@ -8,6 +8,13 @@ export default {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
@@ -65,6 +72,10 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+      },
+      boxShadow: {
+        'soft': '4px 4px 8px #d4d8d9, -4px -4px 8px #ffffff',
+        'soft-in': 'inset 4px 4px 8px #d4d8d9, inset -4px -4px 8px #ffffff',
       },
       borderRadius: {
         lg: 'var(--radius)',

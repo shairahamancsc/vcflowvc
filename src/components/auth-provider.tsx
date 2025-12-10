@@ -54,19 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
     
-    // Initial check
-    const checkUser = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        const activeUser = await getActiveUser(session?.user ?? null);
-        setUser(activeUser);
-        const timer = setTimeout(() => {
-            setLoading(false);
-        }, 500); 
-        return () => clearTimeout(timer);
-    };
-
-    checkUser();
-
     return () => {
       subscription?.unsubscribe();
     };

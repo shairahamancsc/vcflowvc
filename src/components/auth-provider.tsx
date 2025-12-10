@@ -49,22 +49,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const activeUser = await getActiveUser(session?.user ?? null);
-      setUser(activeUser);
-      setLoading(false);
-    };
-
-    checkSession();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const activeUser = await getActiveUser(session?.user ?? null);
         setUser(activeUser);
+        setLoading(false);
+
         if (event === 'SIGNED_IN') {
            // This handles the redirect after login.
            router.push('/dashboard');
+        } else if (event === 'SIGNED_OUT') {
+           router.push('/login');
         }
       }
     );
@@ -82,7 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    router.push('/login');
   };
 
   return (

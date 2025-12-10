@@ -3,13 +3,19 @@ import { StatCard } from './stat-card';
 import { OverviewChart } from './overview-chart';
 import { PerformanceChart } from './performance-chart';
 import { Users, AlertTriangle, CheckCircle, Wrench } from 'lucide-react';
-import { serviceRequests, users, clients } from '@/lib/data';
+import { ServiceRequest, User, Client } from '@/lib/types';
 
-export function AdminDashboard() {
+interface AdminDashboardProps {
+  requests: ServiceRequest[];
+  users: User[];
+  clients: Client[];
+}
+
+export function AdminDashboard({ requests, users, clients }: AdminDashboardProps) {
   const totalClients = clients.length;
-  const pendingRequests = serviceRequests.filter((r) => r.status === 'Pending').length;
-  const completedRequests = serviceRequests.filter((r) => r.status === 'Completed').length;
-  const inProgressRequests = serviceRequests.filter((r) => r.status === 'In Progress').length;
+  const pendingRequests = requests.filter((r) => r.status === 'Pending').length;
+  const completedRequests = requests.filter((r) => r.status === 'Completed').length;
+  const inProgressRequests = requests.filter((r) => r.status === 'In Progress').length;
   
   return (
     <div className="grid gap-4 md:gap-6 lg:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
@@ -43,8 +49,8 @@ export function AdminDashboard() {
       />
 
       <div className="lg:col-span-4 grid gap-4 md:gap-6 lg:gap-8 grid-cols-1 lg:grid-cols-3">
-        <OverviewChart requests={serviceRequests} />
-        <PerformanceChart requests={serviceRequests} users={users} />
+        <OverviewChart requests={requests} />
+        <PerformanceChart requests={requests} users={users} />
       </div>
     </div>
   );

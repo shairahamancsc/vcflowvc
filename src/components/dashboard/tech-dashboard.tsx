@@ -2,7 +2,6 @@
 import { StatCard } from './stat-card';
 import { PerformanceChart } from './performance-chart';
 import { useAuth } from '@/lib/hooks';
-import { serviceRequests, users } from '@/lib/data';
 import { AlertTriangle, CheckCircle, Wrench } from 'lucide-react';
 import {
   Card,
@@ -21,17 +20,23 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useState } from 'react';
-import { ServiceRequest } from '@/lib/types';
+import { ServiceRequest, User } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
 
-export function TechDashboard() {
+interface TechDashboardProps {
+  requests: ServiceRequest[];
+  users: User[];
+}
+
+export function TechDashboard({ requests: allRequests, users }: TechDashboardProps) {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<ServiceRequest[]>([]);
 
   useEffect(() => {
     if (user) {
-      setTasks(serviceRequests.filter(r => r.assignedToId === user.id));
+      setTasks(allRequests.filter(r => r.assignedToId === user.id));
     }
-  }, [user]);
+  }, [user, allRequests]);
 
   if (!user) return null;
 

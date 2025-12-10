@@ -13,7 +13,7 @@ import { Wand2, Loader2, Frown, Smile, Meh } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Client, User } from '@/lib/types';
-import { clients as mockClients, users as mockUsers } from '@/lib/data';
+import { createClient } from '@/lib/supabase/client';
 
 const initialState = {
   message: '',
@@ -49,8 +49,27 @@ export function RequestForm() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [clients, setClients] = useState<Client[]>(mockClients);
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = createClient();
+      const { data: clientsData } = await supabase.from('clients').select('*');
+      setClients(clientsData || []);
+
+      const { data: usersData } = await supabase.from('users').select('*');
+       const appUsers = usersData?.map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email || '',
+        role: u.role,
+        avatarUrl: u.avatar_url || '',
+      })) || [];
+      setUsers(appUsers);
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     if (formState.message === 'Request created') {
@@ -61,7 +80,7 @@ export function RequestForm() {
       formRef.current?.reset();
       setDescription('');
       router.push('/requests');
-    } else if (formState.message) {
+    } else if (formState.message && formState.message !== 'Validation failed') {
         toast({
             title: 'Error creating request',
             description: formState.errors?.server?.[0] || formState.message,

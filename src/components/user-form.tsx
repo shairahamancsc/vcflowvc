@@ -1,15 +1,16 @@
 'use client';
 
-import { useFormStatus } from 'react-dom';
+import { useFormState, useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { createUserAction } from '@/app/actions';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -21,27 +22,38 @@ function SubmitButton() {
   );
 }
 
+const initialState = {
+  message: '',
+  errors: null,
+};
+
+
 export function UserForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const [state, formAction] = useFormState(createUserAction, initialState);
 
-  // This should be a server action calling Supabase admin functions.
-  // This is a placeholder as we can't do that securely from the client.
-  const handleSubmit = (formData: FormData) => {
-    const name = formData.get('name');
-    const email = formData.get('email');
-    console.log('Creating user (simulated):', { name, email });
-    toast({
-      title: 'Success! (Simulated)',
-      description: 'In a real app, this would securely create a new user.',
-    });
-    formRef.current?.reset();
-    router.push('/users');
-  };
+  useEffect(() => {
+    if (state.message === 'User created successfully') {
+      toast({
+        title: 'Success!',
+        description: 'New user has been created.',
+      });
+      formRef.current?.reset();
+      router.push('/users');
+    } else if (state.message) {
+      toast({
+        title: 'Error',
+        description: state.message,
+        variant: 'destructive',
+      });
+    }
+  }, [state, toast, router]);
+
 
   return (
-    <form ref={formRef} action={handleSubmit}>
+    <form ref={formRef} action={formAction}>
       <Card className="shadow-soft w-full">
         <CardHeader>
           <CardTitle>New User</CardTitle>
@@ -52,16 +64,19 @@ export function UserForm() {
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input id="name" name="name" placeholder="e.g., Jane Doe" required />
+               {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" type="email" placeholder="e.g., jane@example.com" required />
+              {state?.errors?.email && <p className="text-sm text-destructive">{state.errors.email[0]}</p>}
             </div>
           </div>
            <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" name="phone" type="tel" placeholder="e.g., 555-123-4567" required />
+              <Input id="phone" name="phone" type="tel" placeholder="e.g., 555-123-4567" />
+               {state?.errors?.phone && <p className="text-sm text-destructive">{state.errors.phone[0]}</p>}
             </div>
              <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
@@ -75,14 +90,17 @@ export function UserForm() {
                     <SelectItem value="customer">Customer</SelectItem>
                   </SelectContent>
                 </Select>
+                 {state?.errors?.role && <p className="text-sm text-destructive">{state.errors.role[0]}</p>}
               </div>
           </div>
            <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" name="password" type="password" required />
+              {state?.errors?.password && <p className="text-sm text-destructive">{state.errors.password[0]}</p>}
             </div>
           </div>
+          {state?.errors?.server && <p className="text-sm text-destructive">{state.errors.server[0]}</p>}
         </CardContent>
         <CardFooter className="flex justify-end">
           <SubmitButton />

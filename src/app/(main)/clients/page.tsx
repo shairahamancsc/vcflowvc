@@ -4,12 +4,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { ClientsTable } from '@/components/clients-table';
 import Link from 'next/link';
-import { clients as mockClients } from '@/lib/data';
-import { useState } from 'react';
 import { Client } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState } from 'react';
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>(mockClients);
+  const [clients, setClients] = useState<Client[]>([]);
+
+  useEffect(() => {
+    const getClients = async () => {
+      const supabase = createClient();
+      const { data } = await supabase.from('clients').select('*');
+      setClients(data || []);
+    };
+    getClients();
+  }, []);
 
   return (
     <div className="space-y-6">

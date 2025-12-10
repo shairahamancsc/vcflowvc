@@ -6,19 +6,41 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { RequestsTable } from '@/components/requests-table';
 import { useAuth } from '@/lib/hooks';
-import { serviceRequests } from '@/lib/data';
 import { ServiceRequest } from '@/lib/types';
 import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function RequestsPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
 
   useEffect(() => {
-    if (user?.role === 'technician') {
-      setRequests(serviceRequests.filter(r => r.assignedToId === user.id));
-    } else {
-      setRequests(serviceRequests);
+    const getRequests = async () => {
+      const supabase = createClient();
+      let query = supabase.from('service_requests').select(`
+        *,
+        client:clients(name),
+        assignee:users(name)
+      `);
+
+      if (user?.role === 'technician') {
+        query = query.eq('assignedToId', user.id);
+      }
+      
+      const { data, error } = await query;
+
+      if (data) {
+        const formattedData = data.map((r: any) => ({
+          ...r,
+          clientName: r.client?.name,
+          assignedToName: r.assignee?.name,
+        }));
+        setRequests(formattedData);
+      }
+    };
+    
+    if (user) {
+      getRequests();
     }
   }, [user]);
 

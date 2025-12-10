@@ -4,12 +4,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { DealersTable } from '@/components/dealers-table';
 import Link from 'next/link';
-import { dealers as mockDealers } from '@/lib/data';
-import { useState } from 'react';
 import { Dealer } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState } from 'react';
 
 export default function DealersPage() {
-  const [dealers, setDealers] = useState<Dealer[]>(mockDealers);
+  const [dealers, setDealers] = useState<Dealer[]>([]);
+  
+  useEffect(() => {
+    const getDealers = async () => {
+      const supabase = createClient();
+      const { data } = await supabase.from('dealers').select('*');
+      setDealers(data || []);
+    };
+    getDealers();
+  }, []);
   
   return (
     <div className="space-y-6">

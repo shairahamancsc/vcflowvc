@@ -4,12 +4,29 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { UsersTable } from '@/components/users-table';
 import Link from 'next/link';
-import { users as mockUsers } from '@/lib/data';
 import { User } from '@/lib/types';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  
+  useEffect(() => {
+    const getUsers = async () => {
+      const supabase = createClient();
+      const { data } = await supabase.from('users').select('*');
+      const appUsers = data?.map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email || '',
+        role: u.role,
+        avatarUrl: u.avatar_url || '',
+        status: u.status || 'Active',
+      })) || [];
+      setUsers(appUsers);
+    };
+    getUsers();
+  }, []);
   
   return (
     <div className="space-y-6">

@@ -100,18 +100,21 @@ export type Database = {
           id: string
           name: string
           role: User['role']
-          avatar_url: string
+          avatar_url: string,
+          status: 'Active' | 'Blocked'
         }
         Insert: {
           id: string
           name: string
           role: User['role']
-          avatar_url?: string
+          avatar_url?: string,
+          status?: 'Active' | 'Blocked'
         }
         Update: {
           name?: string
           role?: User['role']
-          avatar_url?: string
+          avatar_url?: string,
+          status?: 'Active' | 'Blocked'
         }
       }
     }

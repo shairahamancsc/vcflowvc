@@ -8,16 +8,17 @@ import { Header } from '@/components/header';
 import { SplashScreen } from '@/components/splash-screen';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!user) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [user, router]);
 
-  if (loading || !user) {
+  if (!user) {
+    // Return a splash screen or null while the redirect is in progress
     return <SplashScreen />;
   }
 

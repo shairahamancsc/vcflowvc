@@ -49,19 +49,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const fetchSession = async () => {
+    const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const activeUser = await getActiveUser(session?.user ?? null);
       setUser(activeUser);
       setLoading(false);
     };
 
-    fetchSession();
+    checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const activeUser = await getActiveUser(session?.user ?? null);
         setUser(activeUser);
+        if (event === 'SIGNED_IN') {
+           // This handles the redirect after login.
+           router.push('/dashboard');
+        }
       }
     );
     

@@ -8,6 +8,20 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (
+    !supabaseUrl ||
+    supabaseUrl === 'YOUR_SUPABASE_URL_HERE' ||
+    !supabaseAnonKey ||
+    supabaseAnonKey === 'YOUR_SUPABASE_ANON_KEY_HERE'
+  ) {
+    // If Supabase is not configured, we bypass the middleware logic
+    // to prevent crashes and allow the app to load.
+    return response;
+  }
+
   const supabase = createClient();
   const {
     data: { session },

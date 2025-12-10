@@ -1,26 +1,12 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/hooks';
+import { ReactNode } from 'react';
+import { useAuthRedirect } from '@/lib/hooks';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { Header } from '@/components/header';
-import { SplashScreen } from '@/components/splash-screen';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!user) {
-      router.push('/login');
-    }
-  }, [user, router]);
-
-  if (!user) {
-    // Return a splash screen or null while the redirect is in progress
-    return <SplashScreen />;
-  }
+  useAuthRedirect({ to: '/login', when: 'loggedOut' });
 
   return (
     <div className="flex min-h-screen w-full bg-muted/40">

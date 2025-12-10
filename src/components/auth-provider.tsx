@@ -4,8 +4,7 @@ import { createContext, useState, useEffect, ReactNode } from 'react';
 import type { User as AppUser } from '@/lib/types';
 import { SplashScreen } from './splash-screen';
 import { createClient } from '@/lib/supabase/client';
-import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { useRouter } from 'next/navigation';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface AuthContextType {
   user: AppUser | null;
@@ -20,7 +19,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient();
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   const getActiveUser = async (sbUser: SupabaseUser | null): Promise<AppUser | null> => {
     if (!sbUser) {
@@ -49,18 +47,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const activeUser = await getActiveUser(session?.user ?? null);
+      setUser(activeUser);
+      setLoading(false);
+    };
+
+    checkSession();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const activeUser = await getActiveUser(session?.user ?? null);
         setUser(activeUser);
-        setLoading(false);
-
-        if (event === 'SIGNED_IN') {
-           // This handles the redirect after login.
-           router.push('/dashboard');
-        } else if (event === 'SIGNED_OUT') {
-           router.push('/login');
-        }
       }
     );
     
@@ -79,9 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  if (loading) {
+    return <SplashScreen />;
+  }
+
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>
-       {loading ? <SplashScreen /> : children}
+      {children}
     </AuthContext.Provider>
   );
 }

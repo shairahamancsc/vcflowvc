@@ -6,12 +6,13 @@ import { useAuth } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
 import { Button } from './ui/button';
-import { LayoutDashboard, Users, Wrench, ListChecks, FileText } from 'lucide-react';
+import { LayoutDashboard, Users, Wrench, ListChecks, FileText, Handshake } from 'lucide-react';
 
 const adminNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/requests', label: 'Service Requests', icon: Wrench },
   { href: '/clients', label: 'Clients', icon: Users },
+  { href: '/dealers', label: 'Dealers', icon: Handshake },
   { href: '/users', label: 'Users', icon: Users },
   { href: '/notes', label: 'Notes', icon: FileText },
 ];

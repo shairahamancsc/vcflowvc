@@ -16,6 +16,14 @@ export type Client = {
   createdAt: string;
 };
 
+export type Dealer = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  createdAt: string;
+};
+
 export type ServiceRequest = {
   id: string;
   title: string;

@@ -1,4 +1,4 @@
-import { User, Client, ServiceRequest } from './types';
+import { User, Client, ServiceRequest, Dealer } from './types';
 import { subDays, subHours } from 'date-fns';
 
 export const users: User[] = [
@@ -52,6 +52,23 @@ export const clients: Client[] = [
     createdAt: subDays(new Date(), 40).toISOString(),
   },
 ];
+
+export const dealers: Dealer[] = [
+    {
+      id: 'dealer-1',
+      name: 'Printer Parts Plus',
+      email: 'sales@printerparts.com',
+      phone: '555-111-2222',
+      createdAt: subDays(new Date(), 30).toISOString(),
+    },
+    {
+      id: 'dealer-2',
+      name: 'Bulk Components Co.',
+      email: 'orders@bulkcomp.com',
+      phone: '555-333-4444',
+      createdAt: subDays(new Date(), 90).toISOString(),
+    },
+  ];
 
 export const serviceRequests: ServiceRequest[] = [
   {

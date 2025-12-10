@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/hooks';
 import { useRouter } from 'next/navigation';
-import { LogOut } from 'lucide-react';
+import { LogOut, User as UserIcon, Settings } from 'lucide-react';
 
 export function UserNav() {
   const { user, logout } = useAuth();
@@ -55,6 +56,12 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
+           <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/settings">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>

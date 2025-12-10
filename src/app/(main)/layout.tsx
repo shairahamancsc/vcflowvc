@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { Header } from '@/components/header';
-import { Skeleton } from '@/components/ui/skeleton';
+import { SplashScreen } from '@/components/splash-screen';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -18,22 +18,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   }, [user, loading, router]);
 
   if (loading || !user) {
-    return (
-      <div className="flex min-h-screen w-full">
-        <div className="hidden md:block md:w-64 lg:w-72 border-r">
-          <div className="flex h-full max-h-screen flex-col gap-2 p-4">
-            <Skeleton className="h-14" />
-            <Skeleton className="h-12" />
-            <Skeleton className="h-12" />
-            <Skeleton className="h-12" />
-          </div>
-        </div>
-        <div className="flex-1 p-6">
-          <Skeleton className="h-14 w-full mb-6" />
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </div>
-    );
+    return <SplashScreen />;
   }
 
   return (

@@ -29,7 +29,14 @@ export default function LoginPage() {
         email,
         password,
       });
-      if (error) throw error;
+
+      if (error) {
+        // If the error object is empty, it's likely due to unconfigured Supabase credentials.
+        if (!error.message) {
+            throw new Error("Supabase is not configured. Please check your .env file.");
+        }
+        throw error;
+      }
       
       toast({
         title: 'Login successful!',
@@ -39,7 +46,6 @@ export default function LoginPage() {
       router.refresh(); 
 
     } catch (error: any) {
-      console.error('Login failed:', error);
       const errorMessage = error.message || 'An unexpected error occurred.';
       setError(errorMessage);
       toast({

@@ -58,7 +58,7 @@ export function ClientForm() {
 
   return (
     <form ref={formRef} action={formAction}>
-      <Card className="shadow-soft w-full">
+      <Card className="shadow-md w-full">
         <CardHeader>
           <CardTitle>New Client</CardTitle>
           <CardDescription>

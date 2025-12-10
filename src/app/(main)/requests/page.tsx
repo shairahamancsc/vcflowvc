@@ -67,7 +67,7 @@ export default function RequestsPage() {
         )}
       </div>
 
-      <Card className="shadow-soft">
+      <Card className="shadow-md">
         <CardContent className="pt-6">
           <RequestsTable requests={requests} />
         </CardContent>

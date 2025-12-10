@@ -4,9 +4,16 @@ import { ReactNode } from 'react';
 import { useAuthRedirect } from '@/lib/hooks';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { Header } from '@/components/header';
+import { useAuth } from '@/lib/hooks';
+import { SplashScreen } from '@/components/splash-screen';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   useAuthRedirect({ to: '/login', when: 'loggedOut' });
+  const { user } = useAuth();
+
+  if (!user) {
+    return <SplashScreen />;
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-muted/40">

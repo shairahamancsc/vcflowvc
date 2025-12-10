@@ -30,7 +30,7 @@ export default function SettingsPage() {
         <p className="text-muted-foreground">Manage your account settings, preferences, and more.</p>
       </div>
 
-      <Card className="shadow-soft">
+      <Card className="shadow-md">
         <CardHeader>
           <CardTitle>Profile</CardTitle>
           <CardDescription>This is how others will see you on the site.</CardDescription>
@@ -52,7 +52,7 @@ export default function SettingsPage() {
         </form>
       </Card>
 
-      <Card className="shadow-soft">
+      <Card className="shadow-md">
         <CardHeader>
           <CardTitle>Appearance</CardTitle>
           <CardDescription>Customize the look and feel of the application.</CardDescription>
@@ -76,7 +76,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
       
-      <Card className="shadow-soft">
+      <Card className="shadow-md">
         <CardHeader>
           <CardTitle>About</CardTitle>
         </CardHeader>

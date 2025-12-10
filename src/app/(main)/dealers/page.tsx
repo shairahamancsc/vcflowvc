@@ -37,7 +37,7 @@ export default function DealersPage() {
         </Button>
       </div>
 
-      <Card className="shadow-soft">
+      <Card className="shadow-md">
         <CardContent className="pt-6">
           <DealersTable dealers={dealers} />
         </CardContent>

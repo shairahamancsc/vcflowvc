@@ -77,7 +77,7 @@ export function TechDashboard({ requests: allRequests, users }: TechDashboardPro
       />
 
       <div className="lg:col-span-3 grid gap-4 md:gap-6 lg:gap-8 grid-cols-1 lg:grid-cols-3">
-        <Card className="col-span-1 lg:col-span-2 shadow-soft">
+        <Card className="col-span-1 lg:col-span-2 shadow-md">
           <CardHeader>
             <CardTitle>My Recent Tasks</CardTitle>
             <CardDescription>Your 5 most recently assigned tasks.</CardDescription>

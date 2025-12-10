@@ -54,7 +54,7 @@ export function UserForm() {
 
   return (
     <form ref={formRef} action={formAction}>
-      <Card className="shadow-soft w-full">
+      <Card className="shadow-md w-full">
         <CardHeader>
           <CardTitle>New User</CardTitle>
           <CardDescription>Fill out the details below to create a new user account.</CardDescription>

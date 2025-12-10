@@ -30,7 +30,7 @@ export function PerformanceChart({ requests, users: allUsers }: PerformanceChart
         }));
 
   return (
-    <Card className="col-span-1 shadow-soft">
+    <Card className="col-span-1 shadow-md">
       <CardHeader>
         <CardTitle>{isTechnician ? 'My Task Status' : 'Team Performance'}</CardTitle>
         <CardDescription>{isTechnician ? 'Overview of your assigned tasks.' : 'Completed tasks per technician.'}</CardDescription>

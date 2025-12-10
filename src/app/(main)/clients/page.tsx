@@ -35,7 +35,7 @@ export default function ClientsPage() {
         </Button>
       </div>
 
-      <Card className="shadow-soft">
+      <Card className="shadow-md">
         <CardContent className="pt-6">
           <ClientsTable clients={clients} />
         </CardContent>

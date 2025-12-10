@@ -45,7 +45,7 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      <Card className="shadow-soft">
+      <Card className="shadow-md">
         <CardContent className="pt-6">
           <UsersTable users={users} />
         </CardContent>

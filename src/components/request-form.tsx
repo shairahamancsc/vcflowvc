@@ -91,7 +91,7 @@ export function RequestForm() {
 
   return (
     <form ref={formRef} action={formAction}>
-      <Card className="shadow-soft w-full">
+      <Card className="shadow-md w-full">
         <CardHeader>
           <CardTitle>New Service Request</CardTitle>
           <CardDescription>Fill out the details below to create a new service request.</CardDescription>

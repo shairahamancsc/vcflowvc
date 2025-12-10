@@ -30,7 +30,7 @@ export function OverviewChart({ requests }: OverviewChartProps) {
   });
 
   return (
-     <Card className="col-span-1 lg:col-span-2 shadow-soft">
+     <Card className="col-span-1 lg:col-span-2 shadow-md">
       <CardHeader>
         <CardTitle>Service Requests Overview</CardTitle>
         <CardDescription>Requests over the last 6 months.</CardDescription>

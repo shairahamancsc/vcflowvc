@@ -41,16 +41,16 @@ export default function DashboardPage() {
   }, []);
 
 
-  if (!data) {
+  if (!data || !user) {
     return <SplashScreen />;
   }
 
   return (
     <div>
       <h1 className="text-3xl font-bold tracking-tight mb-6">
-        {user?.role === 'admin' ? 'Admin Dashboard' : 'Technician Dashboard'}
+        {user.role === 'admin' ? 'Admin Dashboard' : 'Technician Dashboard'}
       </h1>
-      {user?.role === 'admin' ? <AdminDashboard {...data} /> : <TechDashboard requests={data.requests} users={data.users} />}
+      {user.role === 'admin' ? <AdminDashboard {...data} /> : <TechDashboard requests={data.requests} users={data.users} />}
     </div>
   );
 }

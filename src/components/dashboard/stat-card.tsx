@@ -12,7 +12,7 @@ interface StatCardProps {
 
 export function StatCard({ title, value, description, icon: Icon, color }: StatCardProps) {
   return (
-    <Card className="shadow-soft">
+    <Card className="shadow-md">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Icon className={cn('h-5 w-5 text-muted-foreground', color)} />

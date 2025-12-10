@@ -5,7 +5,6 @@ import type { User as AppUser } from '@/lib/types';
 import { SplashScreen } from './splash-screen';
 import { createClient } from '@/lib/supabase/client';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { usePathname, useRouter } from 'next/navigation';
 
 export interface AuthContextType {
   user: AppUser | null;
@@ -37,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       console.error('Error fetching user profile:', error, JSON.stringify(error, null, 2));
       // If the profile is not found, it might be due to replication delay.
-      // We'll return a basic user object for now.
+      // We'll return a basic user object for now and let the auth listener update it.
       return {
         id: sbUser.id,
         email: sbUser.email!,
@@ -71,14 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        const activeUser = await getActiveİnfromation(session?.user ?? null);
+        const activeUser = await getActiveUser(session?.user ?? null);
         setUser(activeUser);
-        if (_event === 'SIGNED_IN' || _event === 'USER_UPDATED' || _event === 'TOKEN_REFRESHED') {
-          // No need to do anything special here as the main layout will handle redirects
-        }
-        if (_event === 'SIGNED_OUT') {
-           // No need to do anything special here as the main layout will handle redirects
-        }
         setLoading(false);
       }
     );
@@ -108,25 +101,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-// A helper function to get user information from Supabase.
-async function getActiveİnfromation(sbUser: SupabaseUser | null): Promise<AppUser | null> {
-  if (!sbUser) return null;
-
-  const supabase = createClient();
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', sbUser.id)
-    .single();
-
-  return {
-    id: sbUser.id,
-    email: sbUser.email!,
-    name: profile?.name || sbUser.email!,
-    role: profile?.role || 'customer',
-    avatarUrl: profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${sbUser.email!}`,
-    status: profile?.status || 'Active',
-  };
 }

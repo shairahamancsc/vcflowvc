@@ -43,8 +43,6 @@ export default function LoginPage() {
         description: 'Redirecting to your dashboard.',
       });
       // The onAuthStateChange listener in AuthProvider will handle the redirect.
-      // But we can push to be faster.
-      router.push('/dashboard');
     }
   };
 

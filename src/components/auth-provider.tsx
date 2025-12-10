@@ -48,7 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setLoading(true);
         const activeUser = await getActiveUser(session?.user ?? null);
         setUser(activeUser);
         setLoading(false);
@@ -74,22 +73,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const login = async (email: string, pass: string) => {
+    setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    // The onAuthStateChange listener will handle setting the user and loading state.
+    if(error) {
+      setLoading(false);
+    }
     return { error };
   };
   
   const logout = async () => {
+    setLoading(true);
     await supabase.auth.signOut();
     setUser(null);
+    setLoading(false);
   };
-
-  if (loading) {
-    return <SplashScreen />;
-  }
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
+       {loading ? <SplashScreen /> : children}
     </AuthContext.Provider>
   );
 }

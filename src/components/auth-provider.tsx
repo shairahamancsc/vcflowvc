@@ -4,7 +4,7 @@ import { createContext, useState, useEffect, ReactNode } from 'react';
 import type { User as AppUser } from '@/lib/types';
 import { SplashScreen } from './splash-screen';
 import { createClient } from '@/lib/supabase/client';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
 export interface AuthContextType {

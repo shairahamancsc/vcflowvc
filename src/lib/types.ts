@@ -30,7 +30,7 @@ export type ServiceRequest = {
   title: string;
   description: string;
   clientId: string;
-  clientName: string;
+  clientName?: string;
   status: 'Pending' | 'In Progress' | 'Awaiting Parts' | 'Ready for Pickup' | 'Out for Delivery' | 'Completed' | 'Cancelled';
   priority: 'Low' | 'Medium' | 'High';
   assignedToId?: string;
@@ -41,3 +41,79 @@ export type ServiceRequest = {
   aiSummary?: string;
   aiSentiment?: string;
 };
+
+export type Database = {
+  public: {
+    Tables: {
+      clients: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          phone: string
+          address: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          phone: string
+          address: string
+          created_at?: string
+        }
+        Update: {
+          name?: string
+          email?: string
+          phone?: string
+          address?: string
+        }
+      }
+      dealers: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          phone: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          phone: string
+          created_at?: string
+        }
+        Update: {
+          name?: string
+          email?: string
+          phone?: string
+        }
+      }
+      service_requests: {
+        Row: ServiceRequest
+        Insert: Omit<ServiceRequest, 'id' | 'createdAt' | 'updated_at' | 'clientName' | 'assignedToName'>
+        Update: Partial<Omit<ServiceRequest, 'id' | 'createdAt' | 'updated_at' | 'clientName' | 'assignedToName'>>
+      }
+      users: {
+        Row: {
+          id: string
+          name: string
+          role: User['role']
+          avatar_url: string
+        }
+        Insert: {
+          id: string
+          name: string
+          role: User['role']
+          avatar_url?: string
+        }
+        Update: {
+          name?: string
+          role?: User['role']
+          avatar_url?: string
+        }
+      }
+    }
+  }
+}

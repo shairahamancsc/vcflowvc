@@ -12,6 +12,7 @@ const adminNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/requests', label: 'Service Requests', icon: Wrench },
   { href: '/clients', label: 'Clients', icon: Users },
+  { href: '/users', label: 'Users', icon: Users },
   { href: '/notes', label: 'Notes', icon: FileText },
 ];
 

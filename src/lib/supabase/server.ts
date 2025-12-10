@@ -17,17 +17,19 @@ export function createClient() {
     // Return a mock client that will result in errors on data access,
     // but won't crash the entire application during initialization.
     // This allows the user to see the UI and understand they need to add credentials.
-    console.warn("Supabase credentials are not set. The application will not function correctly. Please update your .env file.");
+    console.warn("Supabase credentials are not set for the server. The application will not function correctly. Please update your .env file.");
     return {
         auth: {
             getSession: () => Promise.resolve({ data: { session: null } }),
             onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
             signOut: () => Promise.resolve({}),
+            signUp: () => Promise.resolve({ error: { message: "Supabase not configured. Please check your .env file."} }),
         },
         from: (table: string) => ({
             select: () => Promise.resolve({ data: [], error: { message: "Supabase not configured."} }),
             insert: () => Promise.resolve({ error: { message: "Supabase not configured."} }),
             update: () => Promise.resolve({ error: { message: "Supabase not configured."} }),
+            delete: () => Promise.resolve({ error: { message: "Supabase not configured."} }),
             eq: () => Promise.resolve({ error: { message: "Supabase not configured."} }),
         }),
     } as any;

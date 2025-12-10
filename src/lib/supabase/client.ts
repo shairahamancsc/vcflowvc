@@ -24,14 +24,17 @@ export function createClient() {
         auth: {
             getSession: () => Promise.resolve({ data: { session: null } }),
             onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-            signInWithPassword: () => Promise.resolve({ error: { message: "Supabase not configured."} }),
+            signInWithPassword: () => Promise.resolve({ error: { message: "Supabase not configured. Please check your .env file."} }),
             signOut: () => Promise.resolve({}),
+            signUp: () => Promise.resolve({ error: { message: "Supabase not configured. Please check your .env file."} }),
         },
         from: (table: string) => ({
             select: () => Promise.resolve({ data: [], error: { message: "Supabase not configured."} }),
             insert: () => Promise.resolve({ error: { message: "Supabase not configured."} }),
             update: () => Promise.resolve({ error: { message: "Supabase not configured."} }),
+            delete: () => Promise.resolve({ error: { message: "Supabase not configured."} }),
             eq: () => Promise.resolve({ error: { message: "Supabase not configured."} }),
+            single: () => Promise.resolve({ error: { message: "Supabase not configured."} }),
         }),
     } as any;
   }

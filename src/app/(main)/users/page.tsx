@@ -4,43 +4,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { UsersTable } from '@/components/users-table';
 import Link from 'next/link';
+import { users as mockUsers } from '@/lib/data';
 import { User } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
-import { useEffect, useState } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-
-function UsersSkeleton() {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    );
-  }
+import { useState } from 'react';
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const supabase = createClient();
-    const fetchUsers = async () => {
-      setLoading(true);
-      // Note: Supabase policy should restrict this to admins
-      const { data, error } = await supabase.from('users').select('*');
-      if (data) {
-        setUsers(data);
-      }
-      if(error){
-        console.error("Error fetching users", error);
-      }
-      setLoading(false);
-    };
-
-    fetchUsers();
-  }, []);
-
+  const [users, setUsers] = useState<User[]>(mockUsers);
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -60,7 +30,7 @@ export default function UsersPage() {
 
       <Card className="shadow-soft">
         <CardContent className="pt-6">
-          {loading ? <UsersSkeleton /> : <UsersTable users={users} />}
+          <UsersTable users={users} />
         </CardContent>
       </Card>
     </div>

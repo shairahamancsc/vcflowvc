@@ -1,13 +1,14 @@
 'use client';
 
-import { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useState, useEffect, ReactNode } from 'react';
 import type { User as AppUser } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
-import type { SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
+import { users as mockUsers } from '@/lib/data';
+import { SplashScreen } from './splash-screen';
 
 export interface AuthContextType {
   user: AppUser | null;
-  logout: () => Promise<void>;
+  login: (email: string, pass: string) => Promise<void>;
+  logout: () => void;
   loading: boolean;
 }
 
@@ -16,69 +17,52 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
   useEffect(() => {
-    setSupabase(createClient());
-  }, []);
-
-  const fetchUserProfile = useCallback(async (supabaseUser: SupabaseUser, client: SupabaseClient) => {
-    const { data: profile, error } = await client
-      .from('users')
-      .select('*')
-      .eq('id', supabaseUser.id)
-      .single();
-
-    if (error) {
-      console.error('Error fetching user profile:', error);
-      setUser(null);
-    } else {
-      setUser(profile);
+    // Simulate checking for a logged-in user
+    const loggedInUserEmail = localStorage.getItem('loggedInUser');
+    if (loggedInUserEmail) {
+      const foundUser = mockUsers.find(u => u.email === loggedInUserEmail);
+      setUser(foundUser || null);
     }
+    // Use a timeout to simulate async loading and show splash screen
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500); 
+
+    return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const checkUser = async () => {
-      if (supabase) {
-        setLoading(true);
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          await fetchUserProfile(session.user, supabase);
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      }
-    };
-    checkUser();
-
-    if (supabase) {
-      const { data: authListener } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          setLoading(true);
-          if (session?.user) {
-            await fetchUserProfile(session.user, supabase);
-          } else {
-            setUser(null);
-          }
+  const login = async (email: string, pass: string) => {
+    return new Promise<void>((resolve, reject) => {
+      setLoading(true);
+      // Simulate API call
+      setTimeout(() => {
+        const foundUser = mockUsers.find(u => u.email === email);
+        if (foundUser) {
+          setUser(foundUser);
+          localStorage.setItem('loggedInUser', foundUser.email);
           setLoading(false);
+          resolve();
+        } else {
+          setLoading(false);
+          reject(new Error('Invalid email or password'));
         }
-      );
-      return () => {
-        authListener?.subscription.unsubscribe();
-      };
-    }
-  }, [supabase, fetchUserProfile]);
+      }, 1000);
+    });
+  };
   
-  const logout = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
+  const logout = () => {
     setUser(null);
+    localStorage.removeItem('loggedInUser');
   };
 
+  if (loading) {
+    return <SplashScreen />;
+  }
+
   return (
-    <AuthContext.Provider value={{ user, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

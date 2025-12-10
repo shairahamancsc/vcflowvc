@@ -9,14 +9,14 @@ import { Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/lib/hooks';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const supabase = createClient();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { login } = useAuth();
+  const [email, setEmail] = useState('alicia@example.com');
+  const [password, setPassword] = useState('password123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,18 +25,7 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        // If the error object is empty, it's likely due to unconfigured Supabase credentials.
-        if (!error.message) {
-            throw new Error("Supabase is not configured. Please check your .env file.");
-        }
-        throw error;
-      }
+      await login(email, password);
       
       toast({
         title: 'Login successful!',
@@ -90,6 +79,10 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+            </div>
+            <div className="text-xs text-muted-foreground">
+              <p>Admin: alicia@example.com / password123</p>
+              <p>Tech: john@example.com / password123</p>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button

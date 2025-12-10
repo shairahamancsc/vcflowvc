@@ -4,42 +4,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { ClientsTable } from '@/components/clients-table';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
-import { useEffect, useState } from 'react';
+import { clients as mockClients } from '@/lib/data';
+import { useState } from 'react';
 import { Client } from '@/lib/types';
-import { Skeleton } from '@/components/ui/skeleton';
-
-function ClientsSkeleton() {
-  return (
-    <div className="space-y-4">
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-    </div>
-  );
-}
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const supabase = createClient();
-    const fetchClients = async () => {
-      setLoading(true);
-      const { data, error } = await supabase.from('clients').select('*');
-      if (data) {
-        setClients(data);
-      }
-      if (error) {
-        console.error('Error fetching clients:', error);
-      }
-      setLoading(false);
-    };
-
-    fetchClients();
-  }, []);
+  const [clients, setClients] = useState<Client[]>(mockClients);
 
   return (
     <div className="space-y-6">
@@ -58,7 +28,7 @@ export default function ClientsPage() {
 
       <Card className="shadow-soft">
         <CardContent className="pt-6">
-          {loading ? <ClientsSkeleton /> : <ClientsTable clients={clients} />}
+          <ClientsTable clients={clients} />
         </CardContent>
       </Card>
     </div>

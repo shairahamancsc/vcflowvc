@@ -13,7 +13,7 @@ import { Wand2, Loader2, Frown, Smile, Meh } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Client, User } from '@/lib/types';
-import { createClient as createSupabaseClient } from '@/lib/supabase/client';
+import { clients as mockClients, users as mockUsers } from '@/lib/data';
 
 const initialState = {
   message: '',
@@ -49,20 +49,8 @@ export function RequestForm() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [clients, setClients] = useState<Client[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-
-  useEffect(() => {
-    const supabase = createSupabaseClient();
-    const fetchData = async () => {
-        const { data: clientsData } = await supabase.from('clients').select('id, name');
-        if (clientsData) setClients(clientsData);
-
-        const { data: usersData } = await supabase.from('users').select('id, name, role');
-        if (usersData) setUsers(usersData);
-    };
-    fetchData();
-  }, []);
+  const [clients, setClients] = useState<Client[]>(mockClients);
+  const [users, setUsers] = useState<User[]>(mockUsers);
 
   useEffect(() => {
     if (formState.message === 'Request created') {

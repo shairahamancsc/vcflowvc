@@ -2,6 +2,7 @@
 import { StatCard } from './stat-card';
 import { PerformanceChart } from './performance-chart';
 import { useAuth } from '@/lib/hooks';
+import { serviceRequests, users } from '@/lib/data';
 import { AlertTriangle, CheckCircle, Wrench } from 'lucide-react';
 import {
   Card,
@@ -19,40 +20,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
-import { ServiceRequest, User } from '@/lib/types';
-import { Skeleton } from '../ui/skeleton';
+import { ServiceRequest } from '@/lib/types';
 
 export function TechDashboard() {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<ServiceRequest[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      if (!user) return;
-      setLoading(true);
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('service_requests')
-        .select(`*, clients (name)`)
-        .eq('assignedToId', user.id);
-
-      if (data) {
-         const transformedData = data.map(r => ({
-          ...r,
-          clientName: (r.clients as { name: string })?.name || 'Unknown Client',
-        })) as ServiceRequest[];
-        setTasks(transformedData);
-      }
-      if (error) {
-        console.error('Error fetching tasks:', error);
-      }
-      setLoading(false);
-    };
-
-    fetchTasks();
+    if (user) {
+      setTasks(serviceRequests.filter(r => r.assignedToId === user.id));
+    }
   }, [user]);
 
   if (!user) return null;
@@ -100,8 +78,7 @@ export function TechDashboard() {
             <CardDescription>Your 5 most recently assigned tasks.</CardDescription>
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-40 w-full" /> : (
-                 <Table>
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Client</TableHead>
@@ -129,7 +106,6 @@ export function TechDashboard() {
                 ))}
               </TableBody>
             </Table>
-            )}
           </CardContent>
         </Card>
         <PerformanceChart requests={tasks} users={[]} />

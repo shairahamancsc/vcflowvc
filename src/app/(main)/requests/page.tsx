@@ -6,58 +6,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { RequestsTable } from '@/components/requests-table';
 import { useAuth } from '@/lib/hooks';
-import { createClient } from '@/lib/supabase/client';
+import { serviceRequests } from '@/lib/data';
 import { ServiceRequest } from '@/lib/types';
 import { useEffect, useState } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-
-function RequestsSkeleton() {
-  return (
-    <div className="space-y-4">
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-    </div>
-  );
-}
 
 export default function RequestsPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = createClient();
-    const fetchRequests = async () => {
-      setLoading(true);
-      let query = supabase.from('service_requests').select(`
-        *,
-        clients ( name )
-      `).order('created_at', { ascending: false });
-
-      if(user?.role === 'technician') {
-        query = query.eq('assignedToId', user.id);
-      }
-
-      const { data, error } = await query;
-      
-      if (data) {
-        const transformedData = data.map(r => ({
-          ...r,
-          clientName: (r.clients as { name: string })?.name || 'Unknown Client',
-        })) as ServiceRequest[];
-        setRequests(transformedData);
-      }
-
-      if (error) {
-        console.error('Error fetching service requests:', error);
-      }
-      setLoading(false);
-    };
-
-    if (user) {
-      fetchRequests();
+    if (user?.role === 'technician') {
+      setRequests(serviceRequests.filter(r => r.assignedToId === user.id));
+    } else {
+      setRequests(serviceRequests);
     }
   }, [user]);
 
@@ -86,7 +47,7 @@ export default function RequestsPage() {
 
       <Card className="shadow-soft">
         <CardContent className="pt-6">
-          {loading ? <RequestsSkeleton /> : <RequestsTable requests={requests} />}
+          <RequestsTable requests={requests} />
         </CardContent>
       </Card>
     </div>

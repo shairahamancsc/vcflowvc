@@ -4,41 +4,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { DealersTable } from '@/components/dealers-table';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
-import { useEffect, useState } from 'react';
+import { dealers as mockDealers } from '@/lib/data';
+import { useState } from 'react';
 import { Dealer } from '@/lib/types';
-import { Skeleton } from '@/components/ui/skeleton';
-
-function DealersSkeleton() {
-  return (
-    <div className="space-y-4">
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-    </div>
-  );
-}
 
 export default function DealersPage() {
-  const [dealers, setDealers] = useState<Dealer[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const supabase = createClient();
-    const fetchDealers = async () => {
-      setLoading(true);
-      const { data, error } = await supabase.from('dealers').select('*');
-      if (data) {
-        setDealers(data);
-      }
-      if (error) {
-        console.error('Error fetching dealers:', error);
-      }
-      setLoading(false);
-    };
-
-    fetchDealers();
-  }, []);
-
+  const [dealers, setDealers] = useState<Dealer[]>(mockDealers);
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -58,7 +30,7 @@ export default function DealersPage() {
 
       <Card className="shadow-soft">
         <CardContent className="pt-6">
-          {loading ? <DealersSkeleton /> : <DealersTable dealers={dealers} />}
+          <DealersTable dealers={dealers} />
         </CardContent>
       </Card>
     </div>

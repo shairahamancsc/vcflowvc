@@ -2,9 +2,8 @@
 
 import { summarizeServiceRequest } from '@/ai/flows/summarize-service-request';
 import { z } from 'zod';
-import type { ServiceRequest, User } from '@/lib/types';
+import type { ServiceRequest } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
 import {v4 as uuidv4} from 'uuid';
 
 const requestSchema = z.object({
@@ -44,12 +43,12 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
   }
   
   const { requestText, title, clientId, priority, assigneeId } = validatedFields.data;
-  const supabase = createClient();
 
   try {
     const aiResult = await summarizeServiceRequest({ requestText });
     
-    const newRequest = {
+    // This is a mock implementation. In a real app, you would save this to a database.
+    console.log("New Service Request (Simulated):", {
         id: uuidv4(),
         title,
         description: requestText,
@@ -61,13 +60,7 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
         updated_at: new Date().toISOString(),
         aiSummary: aiResult.summary,
         aiSentiment: aiResult.sentiment,
-    };
-    
-    const { error } = await supabase.from('service_requests').insert(newRequest);
-
-    if (error) {
-      throw new Error(error.message);
-    }
+    });
     
     revalidatePath('/requests');
 
@@ -106,15 +99,11 @@ export async function createClientAction(prevState: any, formData: FormData) {
         };
     }
 
-    const supabase = createClient();
-    const { error } = await supabase.from('clients').insert({
-        ...validatedFields.data,
+    // Mock implementation
+    console.log("New Client (Simulated):", {
         id: uuidv4(),
+        ...validatedFields.data,
     });
-    
-    if (error) {
-        return { message: 'Database error', errors: { server: [error.message] } };
-    }
 
     revalidatePath('/clients');
     return { message: 'Client created successfully', errors: null };
@@ -136,32 +125,20 @@ export async function createDealerAction(prevState: any, formData: FormData) {
         };
     }
 
-    const supabase = createClient();
-    const { error } = await supabase.from('dealers').insert({
-      ...validatedFields.data,
-      id: uuidv4(),
-  });
-
-    if (error) {
-        return { message: 'Database error', errors: { server: [error.message] } };
-    }
+    // Mock implementation
+    console.log("New Dealer (Simulated):", {
+        id: uuidv4(),
+        ...validatedFields.data,
+    });
 
     revalidatePath('/dealers');
     return { message: 'Dealer created successfully', errors: null };
 }
 
 export async function updateServiceRequestStatus(requestId: string, status: ServiceRequest['status']) {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from('service_requests')
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq('id', requestId);
-
-  if (error) {
-    console.error('Error updating status:', error);
-    return { success: false, message: error.message };
-  }
-
+  // Mock implementation
+  console.log(`Updating request ${requestId} to status ${status} (Simulated)`);
+  
   revalidatePath('/requests');
   revalidatePath('/dashboard');
   return { success: true };

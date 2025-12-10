@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
-import { summarizeRequestAction } from '@/app/actions';
+import { summarizeAndCreateRequest } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,17 +33,16 @@ function SubmitButton() {
 
 function SentimentIcon({ sentiment }: { sentiment: string | null }) {
     if (!sentiment) return null;
-    switch (sentiment.toLowerCase()) {
-        case 'positive': return <Smile className="h-5 w-5 text-green-500" />;
-        case 'negative': return <Frown className="h-5 w-5 text-red-500" />;
-        case 'neutral': return <Meh className="h-5 w-5 text-gray-500" />;
-        default: return null;
-    }
+    const lowerSentiment = sentiment.toLowerCase();
+    if (lowerSentiment.includes('positive')) return <Smile className="h-5 w-5 text-green-500" />;
+    if (lowerSentiment.includes('negative')) return <Frown className="h-5 w-5 text-red-500" />;
+    if (lowerSentiment.includes('neutral')) return <Meh className="h-5 w-5 text-gray-500" />;
+    return null;
 }
 
 
 export function RequestForm() {
-  const [formState, formAction] = useFormState(summarizeRequestAction, initialState);
+  const [formState, formAction] = useFormState(summarizeAndCreateRequest, initialState);
   const [description, setDescription] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
@@ -58,7 +57,14 @@ export function RequestForm() {
       });
       formRef.current?.reset();
       setDescription('');
+      // We don't need to reset formState here because useFormState handles it.
       router.push('/requests');
+    } else if (formState.message === 'Validation failed' || formState.message === 'Failed to generate summary or create request.') {
+        toast({
+            title: 'Error',
+            description: formState.message,
+            variant: 'destructive'
+        })
     }
   }, [formState, toast, router]);
 
@@ -73,7 +79,7 @@ export function RequestForm() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="client">Client</Label>
-              <Select name="client" required>
+              <Select name="client">
                 <SelectTrigger id="client">
                   <SelectValue placeholder="Select a client" />
                 </SelectTrigger>
@@ -83,10 +89,16 @@ export function RequestForm() {
                   ))}
                 </SelectContent>
               </Select>
+               {formState?.errors?.clientId && (
+                <p className="text-sm text-destructive">{formState.errors.clientId[0]}</p>
+            )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="title">Request Title</Label>
-              <Input id="title" name="title" placeholder="e.g., Server is down" required />
+              <Input id="title" name="title" placeholder="e.g., Server is down" />
+               {formState?.errors?.title && (
+                <p className="text-sm text-destructive">{formState.errors.title[0]}</p>
+            )}
             </div>
           </div>
           <div className="space-y-2">
@@ -98,7 +110,6 @@ export function RequestForm() {
               className="min-h-32"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              required
             />
              {formState?.errors?.requestText && (
                 <p className="text-sm text-destructive">{formState.errors.requestText[0]}</p>
@@ -156,7 +167,7 @@ export function RequestForm() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">The AI summary will be generated from your description.</p>
+          <p className="text-sm text-muted-foreground">An AI summary will be generated from your description.</p>
           <SubmitButton />
         </CardFooter>
       </Card>

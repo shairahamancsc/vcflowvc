@@ -38,5 +38,5 @@ export type ServiceRequest = {
   updatedAt: string;
   completedAt?: string;
   aiSummary?: string;
-  aiSentiment?: 'Positive' | 'Negative' | 'Neutral' | string;
+  aiSentiment?: string;
 };

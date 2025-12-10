@@ -5,7 +5,7 @@ import { AuthProvider } from '@/components/auth-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'ServiceFlow Pro',
+  title: 'VC Flow',
   description: 'Streamline your service management.',
 };
 

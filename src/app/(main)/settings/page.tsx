@@ -82,7 +82,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            You are running ServiceFlow Pro version <span className="font-semibold text-foreground">{version}</span>.
+            You are running VC Flow version <span className="font-semibold text-foreground">{version}</span>.
           </p>
         </CardContent>
       </Card>

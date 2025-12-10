@@ -2,14 +2,11 @@
 
 import { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import type { User as AppUser } from '@/lib/types';
-import { users as mockUsers } from '@/lib/data';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
-import { isSupabaseConfigured } from '@/lib/config';
 
 export interface AuthContextType {
   user: AppUser | null;
-  login: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -22,40 +19,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
   useEffect(() => {
-    if (isSupabaseConfigured) {
-      setSupabase(createClient());
+    setSupabase(createClient());
+  }, []);
+
+  const fetchUserProfile = useCallback(async (supabaseUser: SupabaseUser, client: SupabaseClient) => {
+    const { data: profile, error } = await client
+      .from('users')
+      .select('*')
+      .eq('id', supabaseUser.id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      setUser(null);
+    } else {
+      setUser(profile);
     }
   }, []);
 
-
-  const loadUser = useCallback(async () => {
-    if (supabase) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const appUser = mockUsers.find(u => u.email === session.user.email);
-        setUser(appUser || null);
-      }
-    } else if (!isSupabaseConfigured) {
-      const storedUserEmail = localStorage.getItem('user-email');
-      if (storedUserEmail) {
-        const appUser = mockUsers.find(u => u.email === storedUserEmail);
-        setUser(appUser || null);
-      }
-    }
-    setLoading(false);
-  }, [supabase]);
-
   useEffect(() => {
-    loadUser();
+    const checkUser = async () => {
+      if (supabase) {
+        setLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await fetchUserProfile(session.user, supabase);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      }
+    };
+    checkUser();
 
     if (supabase) {
       const { data: authListener } = supabase.auth.onAuthStateChange(
-        (event, session) => {
+        async (event, session) => {
           setLoading(true);
-          if (event === 'SIGNED_IN' && session?.user) {
-            const appUser = mockUsers.find(u => u.email === session.user.email);
-            setUser(appUser || null);
-          } else if (event === 'SIGNED_OUT') {
+          if (session?.user) {
+            await fetchUserProfile(session.user, supabase);
+          } else {
             setUser(null);
           }
           setLoading(false);
@@ -65,33 +68,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authListener?.subscription.unsubscribe();
       };
     }
-  }, [loadUser, supabase]);
+  }, [supabase, fetchUserProfile]);
   
-  const login = async (email: string) => {
-    if (!isSupabaseConfigured) {
-      const appUser = mockUsers.find(u => u.email === email);
-      if (appUser) {
-        localStorage.setItem('user-email', email);
-        setUser(appUser);
-      } else {
-        throw new Error('User not found');
-      }
-    }
-    // Supabase login is handled on the login page directly
-  };
-
-
   const logout = async () => {
     if (supabase) {
       await supabase.auth.signOut();
-    } else {
-      localStorage.removeItem('user-email');
     }
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

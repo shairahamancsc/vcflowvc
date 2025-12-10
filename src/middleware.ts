@@ -1,13 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { isSupabaseConfigured } from '@/lib/config';
 
 export async function middleware(request: NextRequest) {
-  // If supabase is not configured, skip middleware
-  if (!isSupabaseConfigured) {
-    return NextResponse.next();
-  }
-
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -30,7 +24,7 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  if (!session) {
+  if (!session && pathname !== '/login') {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 

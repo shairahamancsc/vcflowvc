@@ -2,23 +2,70 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { RequestsTable } from '@/components/requests-table';
-import { serviceRequests } from '@/lib/data';
 import { useAuth } from '@/lib/hooks';
+import { createClient } from '@/lib/supabase/client';
+import { ServiceRequest } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+function RequestsSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-10 w-full" />
+    </div>
+  );
+}
 
 export default function RequestsPage() {
   const { user } = useAuth();
-  
-  const displayRequests = user?.role === 'admin' 
-    ? serviceRequests 
-    : serviceRequests.filter(r => r.assignedToId === user?.id);
-  
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const fetchRequests = async () => {
+      setLoading(true);
+      let query = supabase.from('service_requests').select(`
+        *,
+        clients ( name )
+      `).order('created_at', { ascending: false });
+
+      if(user?.role === 'technician') {
+        query = query.eq('assignedToId', user.id);
+      }
+
+      const { data, error } = await query;
+      
+      if (data) {
+        const transformedData = data.map(r => ({
+          ...r,
+          clientName: (r.clients as { name: string })?.name || 'Unknown Client',
+        })) as ServiceRequest[];
+        setRequests(transformedData);
+      }
+
+      if (error) {
+        console.error('Error fetching service requests:', error);
+      }
+      setLoading(false);
+    };
+
+    if (user) {
+      fetchRequests();
+    }
+  }, [user]);
+
   const pageTitle = user?.role === 'admin' ? 'Service Requests' : 'My Tasks';
-  const pageDescription = user?.role === 'admin' 
-    ? 'Manage and track all client service requests.' 
-    : 'Here are all the tasks assigned to you.';
+  const pageDescription =
+    user?.role === 'admin'
+      ? 'Manage and track all client service requests.'
+      : 'Here are all the tasks assigned to you.';
 
   return (
     <div className="space-y-6">
@@ -39,7 +86,7 @@ export default function RequestsPage() {
 
       <Card className="shadow-soft">
         <CardContent className="pt-6">
-          <RequestsTable requests={displayRequests} />
+          {loading ? <RequestsSkeleton /> : <RequestsTable requests={requests} />}
         </CardContent>
       </Card>
     </div>

@@ -40,7 +40,7 @@ export function ClientsTable({ clients }: ClientsTableProps) {
             <TableCell className="font-medium">{client.name}</TableCell>
             <TableCell>{client.email}</TableCell>
             <TableCell>{client.phone}</TableCell>
-            <TableCell>{format(new Date(client.createdAt), 'MMM d, yyyy')}</TableCell>
+            <TableCell>{format(new Date(client.created_at), 'MMM d, yyyy')}</TableCell>
             <TableCell className="text-right">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useTransition } from 'react';
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, FileText, Smile, Frown, Meh, Truck, Wrench, PackageCheck, ListTodo } from 'lucide-react';
+import { MoreHorizontal, FileText, Smile, Frown, Meh, Loader2 } from 'lucide-react';
 import { ServiceRequest } from '@/lib/types';
 import { format } from 'date-fns';
 import { StatusBadge } from './status-badge';
@@ -33,6 +33,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { updateServiceRequestStatus } from '@/app/actions';
+import { useToast } from '@/hooks/use-toast';
 
 
 function SentimentIcon({ sentiment }: { sentiment: string | null }) {
@@ -57,12 +59,27 @@ const statusOptions: ServiceRequest['status'][] = [
 export function RequestsTable({ requests: initialRequests }: RequestsTableProps) {
   const [requests, setRequests] = useState(initialRequests);
   const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const handleStatusChange = (requestId: string, status: ServiceRequest['status']) => {
-    // In a real app, this would be an API call.
-    // Here, we just update the local state.
-    setRequests(requests.map(req => req.id === requestId ? { ...req, status } : req));
+    startTransition(async () => {
+      const result = await updateServiceRequestStatus(requestId, status);
+      if(result.success) {
+        setRequests(requests.map(req => req.id === requestId ? { ...req, status, updated_at: new Date().toISOString() } : req));
+        toast({
+          title: "Status Updated",
+          description: `Request status changed to "${status}".`,
+        });
+      } else {
+        toast({
+          title: "Error updating status",
+          description: result.message,
+          variant: 'destructive',
+        });
+      }
+    });
   }
 
   const isAdminOrTech = user?.role === 'admin' || user?.role === 'technician';
@@ -91,13 +108,13 @@ export function RequestsTable({ requests: initialRequests }: RequestsTableProps)
               </TableCell>
               <TableCell>{request.priority}</TableCell>
               <TableCell>{request.assignedToName || 'Unassigned'}</TableCell>
-              <TableCell>{format(new Date(request.createdAt), 'MMM d, yyyy')}</TableCell>
+              <TableCell>{format(new Date(request.created_at), 'MMM d, yyyy')}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
                       <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
+                      {isPending && selectedRequest?.id === request.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -113,7 +130,7 @@ export function RequestsTable({ requests: initialRequests }: RequestsTableProps)
                           <DropdownMenuItem
                             key={status}
                             onClick={() => handleStatusChange(request.id, status)}
-                            disabled={request.status === status}
+                            disabled={request.status === status || isPending}
                           >
                             Mark as {status}
                           </DropdownMenuItem>
@@ -127,7 +144,7 @@ export function RequestsTable({ requests: initialRequests }: RequestsTableProps)
         </TableBody>
       </Table>
 
-      <AlertDialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
+      <AlertDialog open={!!selectedRequest} onOpenChange={(open) => !open && setSelectedRequest(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{selectedRequest?.title}</AlertDialogTitle>

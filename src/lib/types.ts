@@ -14,7 +14,7 @@ export type Client = {
   email: string;
   phone: string;
   address: string;
-  createdAt: string;
+  created_at: string;
 };
 
 export type Dealer = {
@@ -22,7 +22,7 @@ export type Dealer = {
   name: string;
   email: string;
   phone: string;
-  createdAt: string;
+  created_at: string;
 };
 
 export type ServiceRequest = {
@@ -35,8 +35,8 @@ export type ServiceRequest = {
   priority: 'Low' | 'Medium' | 'High';
   assignedToId?: string;
   assignedToName?: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
   completedAt?: string;
   aiSummary?: string;
   aiSentiment?: string;

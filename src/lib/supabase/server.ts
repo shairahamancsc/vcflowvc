@@ -1,16 +1,8 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import { isSupabaseConfigured } from "@/lib/config";
 
 export function createClient() {
   const cookieStore = cookies()
-  
-  if (!isSupabaseConfigured) {
-    // This function should ideally not be called if Supabase is not configured.
-    // The middleware and components should guard against calling this.
-    // However, to prevent a hard crash during build or initial render:
-    throw new Error('Server-side Supabase client creation attempted without proper configuration.');
-  }
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

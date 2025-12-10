@@ -1,11 +1,46 @@
+'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { ClientsTable } from '@/components/clients-table';
-import { clients } from '@/lib/data';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState } from 'react';
+import { Client } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+
+function ClientsSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-10 w-full" />
+    </div>
+  );
+}
 
 export default function ClientsPage() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const fetchClients = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from('clients').select('*');
+      if (data) {
+        setClients(data);
+      }
+      if (error) {
+        console.error('Error fetching clients:', error);
+      }
+      setLoading(false);
+    };
+
+    fetchClients();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -23,7 +58,7 @@ export default function ClientsPage() {
 
       <Card className="shadow-soft">
         <CardContent className="pt-6">
-          <ClientsTable clients={clients} />
+          {loading ? <ClientsSkeleton /> : <ClientsTable clients={clients} />}
         </CardContent>
       </Card>
     </div>

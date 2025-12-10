@@ -8,11 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { clients, users } from '@/lib/data';
 import { useEffect, useRef, useState } from 'react';
 import { Wand2, Loader2, Frown, Smile, Meh } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Client, User } from '@/lib/types';
+import { createClient as createSupabaseClient } from '@/lib/supabase/client';
 
 const initialState = {
   message: '',
@@ -48,6 +49,20 @@ export function RequestForm() {
   const { toast } = useToast();
   const router = useRouter();
 
+  const [clients, setClients] = useState<Client[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    const supabase = createSupabaseClient();
+    const fetchData = async () => {
+        const { data: clientsData } = await supabase.from('clients').select('id, name');
+        if (clientsData) setClients(clientsData);
+
+        const { data: usersData } = await supabase.from('users').select('id, name, role');
+        if (usersData) setUsers(usersData);
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     if (formState.message === 'Request created') {
@@ -57,12 +72,11 @@ export function RequestForm() {
       });
       formRef.current?.reset();
       setDescription('');
-      // We don't need to reset formState here because useFormState handles it.
       router.push('/requests');
-    } else if (formState.message === 'Validation failed' || formState.message === 'Failed to generate summary or create request.') {
+    } else if (formState.message) {
         toast({
-            title: 'Error',
-            description: formState.message,
+            title: 'Error creating request',
+            description: formState.errors?.server?.[0] || formState.message,
             variant: 'destructive'
         })
     }

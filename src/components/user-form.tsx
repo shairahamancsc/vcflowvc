@@ -26,15 +26,15 @@ export function UserForm() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // In a real app, this would call a server action to securely create a user.
-  // For this prototype, we'll just show a success message.
+  // This should be a server action calling Supabase admin functions.
+  // This is a placeholder as we can't do that securely from the client.
   const handleSubmit = (formData: FormData) => {
     const name = formData.get('name');
     const email = formData.get('email');
     console.log('Creating user (simulated):', { name, email });
     toast({
-      title: 'Success!',
-      description: 'New user has been created (simulated).',
+      title: 'Success! (Simulated)',
+      description: 'In a real app, this would securely create a new user.',
     });
     formRef.current?.reset();
     router.push('/users');

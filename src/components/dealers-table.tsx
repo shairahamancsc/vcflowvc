@@ -41,7 +41,7 @@ import {
               <TableCell className="font-medium">{dealer.name}</TableCell>
               <TableCell>{dealer.email}</TableCell>
               <TableCell>{dealer.phone}</TableCell>
-              <TableCell>{format(new Date(dealer.createdAt), 'MMM d, yyyy')}</TableCell>
+              <TableCell>{format(new Date(dealer.created_at), 'MMM d, yyyy')}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

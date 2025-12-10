@@ -8,6 +8,7 @@ export const users: User[] = [
     email: 'shairahaman.csc@gmail.com',
     role: 'admin',
     avatarUrl: 'https://picsum.photos/seed/admin/100/100',
+    phone: '111-222-3333',
   },
   {
     id: 'user-2',
@@ -15,6 +16,15 @@ export const users: User[] = [
     email: 'sskingshaikpro@gmail.com',
     role: 'technician',
     avatarUrl: 'https://picsum.photos/seed/tech/100/100',
+    phone: '444-555-6666',
+  },
+  {
+    id: 'user-3',
+    name: 'Test Customer',
+    email: 'customer@test.com',
+    role: 'customer',
+    avatarUrl: 'https://picsum.photos/seed/customer/100/100',
+    phone: '777-888-9999',
   },
 ];
 
@@ -117,6 +127,8 @@ export const serviceRequests: ServiceRequest[] = [
     clientName: 'Innovate Inc.',
     status: 'Pending',
     priority: 'Low',
+    assignedToId: 'user-2',
+    assignedToName: 'Shaik King',
     createdAt: subDays(new Date(), 1).toISOString(),
     updatedAt: subDays(new Date(), 1).toISOString(),
   },

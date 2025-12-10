@@ -59,6 +59,10 @@ export function UserForm() {
             </div>
           </div>
            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input id="phone" name="phone" type="tel" placeholder="e.g., 555-123-4567" required />
+            </div>
              <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
                 <Select name="role" required defaultValue="technician">
@@ -68,9 +72,12 @@ export function UserForm() {
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="technician">Technician</SelectItem>
+                    <SelectItem value="customer">Customer</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+          </div>
+           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" name="password" type="password" required />

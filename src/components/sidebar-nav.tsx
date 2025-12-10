@@ -23,7 +23,11 @@ const techNavItems = [
   { href: '/notes', label: 'Notes', icon: FileText },
 ];
 
-export function SidebarNav() {
+interface SidebarNavProps {
+  onLinkClick?: () => void;
+}
+
+export function SidebarNav({ onLinkClick }: SidebarNavProps) {
   const { user } = useAuth();
   const pathname = usePathname();
   const navItems = user?.role === 'admin' ? adminNavItems : techNavItems;
@@ -40,6 +44,7 @@ export function SidebarNav() {
             asChild
             variant={pathname.startsWith(item.href) ? 'default' : 'ghost'}
             className="w-full justify-start text-base h-12"
+            onClick={onLinkClick}
           >
             <Link href={item.href}>
               <item.icon className="mr-4 h-5 w-5" />

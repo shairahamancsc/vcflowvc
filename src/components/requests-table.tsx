@@ -18,14 +18,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, FileText, Smile, Frown, Meh } from 'lucide-react';
+import { MoreHorizontal, FileText, Smile, Frown, Meh, Truck, Wrench, PackageCheck, ListTodo } from 'lucide-react';
 import { ServiceRequest } from '@/lib/types';
 import { format } from 'date-fns';
 import { StatusBadge } from './status-badge';
 import { useAuth } from '@/lib/hooks';
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -33,6 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
 
 function SentimentIcon({ sentiment }: { sentiment: string | null }) {
@@ -43,6 +43,16 @@ function SentimentIcon({ sentiment }: { sentiment: string | null }) {
     if (lowerSentiment.includes('neutral')) return <Meh className="h-5 w-5 text-gray-500" />;
     return null;
 }
+
+const statusOptions: ServiceRequest['status'][] = [
+    'Pending',
+    'In Progress',
+    'Awaiting Parts',
+    'Ready for Pickup',
+    'Out for Delivery',
+    'Completed',
+    'Cancelled'
+];
 
 export function RequestsTable({ requests: initialRequests }: RequestsTableProps) {
   const [requests, setRequests] = useState(initialRequests);
@@ -55,7 +65,7 @@ export function RequestsTable({ requests: initialRequests }: RequestsTableProps)
     setRequests(requests.map(req => req.id === requestId ? { ...req, status } : req));
   }
 
-  const isTechnician = user?.role === 'technician';
+  const isAdminOrTech = user?.role === 'admin' || user?.role === 'technician';
 
   return (
     <>
@@ -96,17 +106,19 @@ export function RequestsTable({ requests: initialRequests }: RequestsTableProps)
                       <FileText className="mr-2 h-4 w-4" />
                       View Details
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Change Status</DropdownMenuLabel>
-                    {['Pending', 'In Progress', 'Completed', 'Cancelled'].map(status => (
-                      <DropdownMenuItem
-                        key={status}
-                        onClick={() => handleStatusChange(request.id, status as ServiceRequest['status'])}
-                        disabled={request.status === status}
-                      >
-                        Mark as {status}
-                      </DropdownMenuItem>
-                    ))}
+                    {isAdminOrTech && <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+                        {statusOptions.map(status => (
+                          <DropdownMenuItem
+                            key={status}
+                            onClick={() => handleStatusChange(request.id, status)}
+                            disabled={request.status === status}
+                          >
+                            Mark as {status}
+                          </DropdownMenuItem>
+                        ))}
+                    </>}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

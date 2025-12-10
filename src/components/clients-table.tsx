@@ -30,7 +30,7 @@ export function ClientsTable({ clients }: ClientsTableProps) {
           <TableHead>Name</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Phone</TableHead>
-          <TableHead>Member Since</TableHead>
+          <TableHead>Client Since</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>

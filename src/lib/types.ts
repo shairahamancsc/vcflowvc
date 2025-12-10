@@ -2,9 +2,10 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'technician';
+  role: 'admin' | 'technician' | 'customer';
   avatarUrl: string;
   status?: 'Active' | 'Blocked';
+  phone?: string;
 };
 
 export type Client = {
@@ -30,7 +31,7 @@ export type ServiceRequest = {
   description: string;
   clientId: string;
   clientName: string;
-  status: 'Pending' | 'In Progress' | 'Completed' | 'Cancelled';
+  status: 'Pending' | 'In Progress' | 'Awaiting Parts' | 'Ready for Pickup' | 'Out for Delivery' | 'Completed' | 'Cancelled';
   priority: 'Low' | 'Medium' | 'High';
   assignedToId?: string;
   assignedToName?: string;

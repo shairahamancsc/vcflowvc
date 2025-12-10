@@ -5,6 +5,7 @@ import type { User as AppUser } from '@/lib/types';
 import { SplashScreen } from './splash-screen';
 import { createClient } from '@/lib/supabase/client';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 
 export interface AuthContextType {
   user: AppUser | null;
@@ -19,6 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient();
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const getActiveUser = async (sbUser: SupabaseUser | null): Promise<AppUser | null> => {
     if (!sbUser) {
@@ -33,7 +35,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (error) {
       console.error('Error fetching user profile:', error);
-      // Log out the user if the profile is missing, as the user is in an inconsistent state.
       await supabase.auth.signOut();
       return null;
     }
@@ -48,21 +49,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const checkInitialSession = async () => {
+    const fetchSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const activeUser = await getActiveUser(session?.user ?? null);
       setUser(activeUser);
       setLoading(false);
     };
 
-    checkInitialSession();
+    fetchSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const activeUser = await getActiveUser(session?.user ?? null);
         setUser(activeUser);
-        // The initial load is handled above, this just handles subsequent changes.
-        if (loading) setLoading(false);
       }
     );
     
@@ -73,13 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, pass: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-    return { error };
+    return await supabase.auth.signInWithPassword({ email, password: pass });
   };
   
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    router.push('/login');
   };
 
   return (

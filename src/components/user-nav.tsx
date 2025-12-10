@@ -13,17 +13,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/hooks';
-import { useRouter } from 'next/navigation';
-import { LogOut, User as UserIcon, Settings } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 
 export function UserNav() {
   const { user, logout } = useAuth();
-  const router = useRouter();
 
   const handleLogout = async () => {
     await logout();
-    router.push('/login');
-    router.refresh();
   };
 
   if (!user) {

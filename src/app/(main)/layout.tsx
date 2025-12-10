@@ -17,7 +17,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     }
   }, [user, loading, router]);
 
-  if (loading || !user) {
+  if (!user) {
     return <SplashScreen />;
   }
 

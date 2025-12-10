@@ -48,7 +48,7 @@ export default function LoginPage() {
         title: 'Login successful!',
         description: 'Redirecting to your dashboard.',
       });
-      // The onAuthStateChange listener in AuthProvider will handle the redirect.
+       // The AuthProvider will handle the redirect.
     }
   };
 

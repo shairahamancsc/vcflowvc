@@ -10,19 +10,14 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/hooks';
-import { users as mockUsers } from '@/lib/data';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { login } = useAuth();
   
-  // Find initial user from mock data or default
-  const adminUser = mockUsers.find(u => u.role === 'admin') || { email: '', password: '' };
-  const techUser = mockUsers.find(u => u.role === 'technician') || { email: '', password: '' };
-
-  const [email, setEmail] = useState(adminUser.email);
-  const [password, setPassword] = useState('password123'); // Default password for mock users
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,10 +80,6 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-            </div>
-            <div className="text-xs text-muted-foreground">
-              <p>Admin: {adminUser.email} / password123</p>
-              <p>Tech: {techUser.email} / password123</p>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button

@@ -91,7 +91,7 @@ export const serviceRequests: ServiceRequest[] = [
     priority: 'High',
     assignedToId: '2',
     assignedToName: 'John Mayer',
-    created_at: subDays(new Date(), 2).toISOString(),
+    createdAt: subDays(new Date(), 2).toISOString(),
     updated_at: subHours(new Date(), 4).toISOString(),
   },
   {
@@ -104,7 +104,7 @@ export const serviceRequests: ServiceRequest[] = [
     priority: 'Medium',
     assignedToId: '3',
     assignedToName: 'Billie Eilish',
-    created_at: subDays(new Date(), 1).toISOString(),
+    createdAt: subDays(new Date(), 1).toISOString(),
     updated_at: subHours(new Date(), 1).toISOString(),
   },
   {
@@ -117,7 +117,7 @@ export const serviceRequests: ServiceRequest[] = [
     priority: 'High',
     assignedToId: '2',
     assignedToName: 'John Mayer',
-    created_at: subDays(new Date(), 4).toISOString(),
+    createdAt: subDays(new Date(), 4).toISOString(),
     updated_at: subHours(new Date(), 8).toISOString(),
   },
   {
@@ -130,7 +130,7 @@ export const serviceRequests: ServiceRequest[] = [
     priority: 'Low',
     assignedToId: '3',
     assignedToName: 'Billie Eilish',
-    created_at: subDays(new Date(), 10).toISOString(),
+    createdAt: subDays(new Date(), 10).toISOString(),
     updated_at: subDays(new Date(), 2).toISOString(),
   },
 ];

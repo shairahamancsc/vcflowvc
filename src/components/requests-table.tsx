@@ -75,7 +75,7 @@ export function RequestsTable({ requests: initialRequests }: RequestsTableProps)
       } else {
         toast({
           title: "Error updating status",
-          description: result.message,
+          description: "There was an issue updating the request status.",
           variant: 'destructive',
         });
       }
@@ -108,7 +108,7 @@ export function RequestsTable({ requests: initialRequests }: RequestsTableProps)
               </TableCell>
               <TableCell>{request.priority}</TableCell>
               <TableCell>{request.assignedToName || 'Unassigned'}</TableCell>
-              <TableCell>{format(new Date(request.created_at), 'MMM d, yyyy')}</TableCell>
+              <TableCell>{format(new Date(request.createdAt), 'MMM d, yyyy')}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

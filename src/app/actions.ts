@@ -56,7 +56,7 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
         status: 'Pending',
         priority: priority,
         assignedToId: assigneeId === 'unassigned' ? null : assigneeId,
-        created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         aiSummary: aiResult.summary,
         aiSentiment: aiResult.sentiment,

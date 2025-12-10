@@ -35,7 +35,7 @@ export type ServiceRequest = {
   priority: 'Low' | 'Medium' | 'High';
   assignedToId?: string;
   assignedToName?: string;
-  created_at: string;
+  createdAt: string;
   updated_at: string;
   completedAt?: string;
   aiSummary?: string;

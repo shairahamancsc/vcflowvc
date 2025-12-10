@@ -20,8 +20,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient();
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const pathname = usePathname();
 
   const getActiveUser = useCallback(async (sbUser: SupabaseUser | null): Promise<AppUser | null> => {
     if (!sbUser) {
@@ -46,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: profile.name || sbUser.email!,
         role: profile.role || 'customer',
         avatarUrl: profile.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.name}`,
+        status: profile.status || 'Active',
       };
     }
 
@@ -56,13 +55,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: sbUser.id,
         name: sbUser.user_metadata?.name || sbUser.email!,
         role: 'customer',
-        avatar_url: sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${sbUser.user_metadata?.name || sbUser.email!}`
+        avatar_url: sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${sbUser.user_metadata?.name || sbUser.email!}`,
+        status: 'Active',
       })
       .select()
       .single();
 
     if (insertError) {
-      console.error('Error creating user profile:', insertError);
+      console.error('Error creating user profile:', insertError, JSON.stringify(insertError, null, 2));
       return null;
     }
 
@@ -77,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: newProfileData.name,
       role: newProfileData.role,
       avatarUrl: newProfileData.avatar_url,
+      status: newProfileData.status,
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -84,21 +85,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const activeUser = await getActiveUser(session.user);
-        setUser(activeUser);
-      }
+      const activeUser = await getActiveUser(session?.user ?? null);
+      setUser(activeUser);
       setLoading(false);
     };
 
     checkInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         const activeUser = await getActiveUser(session?.user ?? null);
         setUser(activeUser);
-        
-        // Ensure loading is false after auth state changes as well
         setLoading(false);
       }
     );
@@ -117,7 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    router.push('/login');
   };
 
   if (loading) {

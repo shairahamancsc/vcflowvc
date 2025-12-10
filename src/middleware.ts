@@ -13,10 +13,9 @@ export async function middleware(request: NextRequest) {
 
   if (
     !supabaseUrl ||
-    supabaseUrl === 'YOUR_SUPABASE_URL_HERE' ||
-    !supabaseAnonKey ||
-    supabaseAnonKey === 'YOUR_SUPABASE_ANON_KEY_HERE'
+    !supabaseAnonKey
   ) {
+    // If Supabase credentials are not set, we can't do anything.
     return response;
   }
 

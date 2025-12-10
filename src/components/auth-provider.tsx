@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('users')
       .select('*')
       .eq('id', sbUser.id)
-      .maybeSingle(); // Use maybeSingle to avoid error if profile doesn't exist yet
+      .maybeSingle();
     
     if (error) {
       console.error('Error fetching user profile:', error);
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // If profile is not found, create it
-    const { data: newProfile, error: insertError } = await supabase
+    const { data: newProfileData, error: insertError } = await supabase
       .from('users')
       .insert({
         id: sbUser.id,
@@ -66,32 +66,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
+    if (!newProfileData) {
+        console.error('Profile could not be created. The insert operation returned no data.');
+        return null;
+    }
+
     return {
       id: sbUser.id,
       email: sbUser.email!,
-      name: newProfile.name,
-      role: newProfile.role,
-      avatarUrl: newProfile.avatar_url,
+      name: newProfileData.name,
+      role: newProfileData.role,
+      avatarUrl: newProfileData.avatar_url,
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        const activeUser = await getActiveUser(session?.user ?? null);
-        setUser(activeUser);
-        setLoading(false);
-
-        if (event === 'SIGNED_IN' && activeUser) {
-          router.push('/dashboard');
-        } else if (event === 'SIGNED_OUT') {
-          router.push('/login');
-        }
-      }
-    );
-
-    // Also check initial session
     const checkInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -100,13 +90,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setLoading(false);
     };
+
     checkInitialSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const activeUser = await getActiveUser(session?.user ?? null);
+        setUser(activeUser);
+        
+        // Ensure loading is false after auth state changes as well
+        setLoading(false);
+      }
+    );
     
     return () => {
       subscription?.unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const login = async (email: string, pass: string) => {
     return await supabase.auth.signInWithPassword({ email, password: pass });
@@ -115,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    router.push('/login');
   };
 
   if (loading) {

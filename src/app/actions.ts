@@ -179,11 +179,6 @@ export async function createUserAction(prevState: any, formData: FormData) {
     const { name, email, password, role } = validatedFields.data;
     const supabase = createClient();
     
-    // Supabase admin client is needed to create users. 
-    // This is not available in this environment.
-    // We will simulate the user creation and add to our public.users table.
-    console.log("Simulating user creation. In a real environment, use Supabase Admin SDK.");
-    
     const { data: authUser, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -200,19 +195,8 @@ export async function createUserAction(prevState: any, formData: FormData) {
          return { message: authError?.message || 'Could not authenticate user.', errors: null };
     }
     
-    // Also insert into public users table
-    const { error: profileError } = await supabase.from('users').insert({
-        id: authUser.user.id,
-        name,
-        role,
-        avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${name}`
-    });
-
-    if (profileError) {
-        return { message: profileError.message, errors: null };
-    }
-
-
+    // Also insert into public users table which is handled by the trigger `handle_new_user`
+    
     revalidatePath('/users');
     return { message: 'User created successfully', errors: null };
 }

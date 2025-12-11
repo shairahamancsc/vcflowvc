@@ -37,15 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching user profile:', error, JSON.stringify(error, null, 2));
     }
 
-    // Special case for the admin user
-    const isAdmin = sbUser.email === 'shsirahaman.csc@gmail.com';
-    const userRole = isAdmin ? 'admin' : (profile?.role || 'technician');
-
-    if (isAdmin && profile && profile.role !== 'admin') {
-        // If the admin user exists in DB but role is not admin, update it.
-        // This is a failsafe.
-        await supabase.from('users').update({ role: 'admin' }).eq('id', sbUser.id);
-    }
+    const userRole = profile?.role || 'technician';
 
     return {
       id: sbUser.id,

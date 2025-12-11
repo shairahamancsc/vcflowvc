@@ -41,26 +41,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isAdmin = sbUser.email === 'shsirahaman.csc@gmail.com';
     const userRole = isAdmin ? 'admin' : (profile?.role || 'technician');
 
-    if (!profile) {
-       // Profile doesn't exist yet, likely due to replication delay.
-       // Return a temporary user object. The onAuthStateChange listener will eventually get the correct profile.
-       return {
-        id: sbUser.id,
-        email: sbUser.email!,
-        name: sbUser.user_metadata?.name || sbUser.email!,
-        role: userRole,
-        avatarUrl: sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${sbUser.email!}`,
-        status: 'Active',
-      };
+    if (isAdmin && profile && profile.role !== 'admin') {
+        // If the admin user exists in DB but role is not admin, update it.
+        // This is a failsafe.
+        await supabase.from('users').update({ role: 'admin' }).eq('id', sbUser.id);
     }
 
     return {
       id: sbUser.id,
       email: sbUser.email!,
-      name: profile.name || sbUser.email!,
+      name: profile?.name || sbUser.user_metadata?.name || sbUser.email!,
       role: userRole,
-      avatarUrl: profile.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.name}`,
-      status: profile.status || 'Active',
+      avatarUrl: profile?.avatar_url || sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.name || sbUser.email!}`,
+      status: profile?.status || 'Active',
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

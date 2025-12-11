@@ -1,7 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { PanelLeft } from 'lucide-react';
 import { UserNav } from './user-nav';
@@ -20,6 +27,12 @@ export function Header() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="sm:max-w-xs p-0">
+           <SheetHeader className="sr-only">
+             <SheetTitle>Navigation Menu</SheetTitle>
+             <SheetDescription>
+               Main navigation links for the application.
+             </SheetDescription>
+           </SheetHeader>
           <SidebarNav onLinkClick={() => setIsSheetOpen(false)} />
         </SheetContent>
       </Sheet>

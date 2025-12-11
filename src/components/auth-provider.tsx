@@ -54,11 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching user profile:', error, JSON.stringify(error, null, 2));
     }
 
+    // Default to 'technician' if profile or role is missing for non-admin users.
+    const userRole = profile?.role || 'technician';
+
     return {
       id: sbUser.id,
       email: sbUser.email!,
       name: profile?.name || sbUser.user_metadata?.name || sbUser.email!,
-      role: profile?.role || 'technician',
+      role: userRole,
       avatarUrl: profile?.avatar_url || sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.name || sbUser.email!}`,
       status: profile?.status || 'Active',
     };

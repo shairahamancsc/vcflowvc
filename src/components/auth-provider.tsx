@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('users')
       .select('*')
       .eq('id', sbUser.id)
-      .single();
+      .maybeSingle(); // Use maybeSingle() to prevent error on 0 rows
     
     if (error) {
       console.error('Error fetching user profile:', error, JSON.stringify(error, null, 2));
@@ -41,7 +41,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: sbUser.id,
         email: sbUser.email!,
         name: sbUser.user_metadata?.name || sbUser.email!,
-        role: 'customer',
+        role: 'customer', // Default role
+        avatarUrl: sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${sbUser.email!}`,
+        status: 'Active',
+      };
+    }
+
+    if (!profile) {
+       // Profile doesn't exist yet, likely due to replication delay.
+       // Return a temporary user object.
+       return {
+        id: sbUser.id,
+        email: sbUser.email!,
+        name: sbUser.user_metadata?.name || sbUser.email!,
+        role: 'customer', // Default role
         avatarUrl: sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${sbUser.email!}`,
         status: 'Active',
       };

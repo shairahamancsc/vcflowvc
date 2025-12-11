@@ -87,7 +87,6 @@ export function UserForm() {
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="technician">Technician</SelectItem>
-                    <SelectItem value="customer">Customer</SelectItem>
                   </SelectContent>
                 </Select>
                  {state?.errors?.role && <p className="text-sm text-destructive">{state.errors.role[0]}</p>}

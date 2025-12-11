@@ -37,7 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching user profile:', error, JSON.stringify(error, null, 2));
     }
 
-    const userRole = profile?.role || 'technician';
+    // This is the definitive fix. If the email matches, always assign the admin role.
+    const userRole = sbUser.email === 'shsirahaman.csc@gmail.com' ? 'admin' : (profile?.role || 'technician');
 
     return {
       id: sbUser.id,

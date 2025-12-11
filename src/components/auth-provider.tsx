@@ -24,9 +24,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!sbUser) {
       return null;
     }
+
+    // Definitive fix: Check for the admin email first and return immediately if it matches.
+    if (sbUser.email === 'shsirahaman.csc@gmail.com') {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('name, avatar_url, status')
+        .eq('id', sbUser.id)
+        .maybeSingle();
+
+      return {
+        id: sbUser.id,
+        email: sbUser.email,
+        name: profile?.name || sbUser.user_metadata?.name || sbUser.email,
+        role: 'admin', // Force the role to admin.
+        avatarUrl: profile?.avatar_url || sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.name || sbUser.email}`,
+        status: profile?.status || 'Active',
+      };
+    }
     
-    // The user profile should now be created by the database trigger.
-    // We just need to fetch it.
+    // For all other users, fetch their profile from the database.
     const { data: profile, error } = await supabase
       .from('users')
       .select('*')
@@ -37,14 +54,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching user profile:', error, JSON.stringify(error, null, 2));
     }
 
-    // This is the definitive fix. If the email matches, always assign the admin role.
-    const userRole = sbUser.email === 'shsirahaman.csc@gmail.com' ? 'admin' : (profile?.role || 'technician');
-
     return {
       id: sbUser.id,
       email: sbUser.email!,
       name: profile?.name || sbUser.user_metadata?.name || sbUser.email!,
-      role: userRole,
+      role: profile?.role || 'technician',
       avatarUrl: profile?.avatar_url || sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.name || sbUser.email!}`,
       status: profile?.status || 'Active',
     };

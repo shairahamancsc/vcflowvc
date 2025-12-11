@@ -35,26 +35,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (error) {
       console.error('Error fetching user profile:', error, JSON.stringify(error, null, 2));
-      // If the profile is not found, it might be due to replication delay.
-      // We'll return a basic user object for now and let the auth listener update it.
-      return {
-        id: sbUser.id,
-        email: sbUser.email!,
-        name: sbUser.user_metadata?.name || sbUser.email!,
-        role: sbUser.email === 'shsirahaman.csc@gmail.com' ? 'admin' : 'customer', // Default role
-        avatarUrl: sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${sbUser.email!}`,
-        status: 'Active',
-      };
     }
 
     if (!profile) {
        // Profile doesn't exist yet, likely due to replication delay.
        // Return a temporary user object. The onAuthStateChange listener will eventually get the correct profile.
+       const isPotentiallyAdmin = sbUser.email === 'shsirahaman.csc@gmail.com';
        return {
         id: sbUser.id,
         email: sbUser.email!,
         name: sbUser.user_metadata?.name || sbUser.email!,
-        role: sbUser.email === 'shsirahaman.csc@gmail.com' ? 'admin' : 'customer', // Default role
+        role: isPotentiallyAdmin ? 'admin' : 'technician', // Grant admin role based on email
         avatarUrl: sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${sbUser.email!}`,
         status: 'Active',
       };
@@ -67,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: sbUser.id,
       email: sbUser.email!,
       name: profile.name || sbUser.email!,
-      role: userRole || 'customer',
+      role: userRole || 'technician',
       avatarUrl: profile.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.name}`,
       status: profile.status || 'Active',
     };

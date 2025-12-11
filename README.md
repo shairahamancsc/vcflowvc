@@ -8,7 +8,7 @@ To get started, take a look at src/app/page.tsx.
 
 To log in as the administrator, you must first create the user account through the application's UI. The application code is configured to automatically grant admin privileges to a specific email address.
 
-1.  **Sign Up**: Since user creation is restricted by default, you'll need to create your user through the New User page. Navigate to `/users/new`.
+1.  **Sign Up**: Navigate to `/users/new` to access the new user creation form.
 2.  **Use these credentials**:
     *   **Name**: `Shaik Anisul Rahaman`
     *   **Email**: `shsirahaman.csc@gmail.com`
@@ -19,21 +19,19 @@ After you sign up, the application will automatically recognize your email and a
 
 ## Supabase Row Level Security (RLS) Policies
 
-For user profiles to be created correctly upon first login, you must enable Row Level Security (RLS) on the `users` table and create a policy that allows users to insert their own records. This is handled by a database trigger, but the RLS policy is still a good security practice.
+For the database trigger to create user profiles correctly, you must enable Row Level Security (RLS) on the `users` table and create a policy that allows the `postgres` user (which runs triggers) to insert records.
 
 Go to the **Supabase Dashboard** -> **Authentication** -> **Policies**. Select the `users` table and create a new policy with the following details:
 
-**Policy Name:** `Allow individual user create for own record`
+**Policy Name:** `Allow postgres user to insert`
 
 **Allowed operation:** `INSERT`
 
-**Target roles:** `authenticated`
+**Target roles:** `postgres`
 
 **USING expression:**
 ```sql
-auth.uid() = id
+true
 ```
 
-This ensures that a user can only create a profile for themselves, which is a secure and necessary step for the application to function correctly.
-
-# vcflowvc
+This ensures that the trigger function has the necessary permissions to create a user profile when a new user signs up.

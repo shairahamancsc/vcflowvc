@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('users')
       .select('*')
       .eq('id', sbUser.id)
-      .maybeSingle(); // Use maybeSingle() to prevent error on 0 rows
+      .maybeSingle(); 
     
     if (error) {
       console.error('Error fetching user profile:', error, JSON.stringify(error, null, 2));

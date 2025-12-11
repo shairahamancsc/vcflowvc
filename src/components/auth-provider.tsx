@@ -37,28 +37,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching user profile:', error, JSON.stringify(error, null, 2));
     }
 
+    // Special case for the admin user
+    const isAdmin = sbUser.email === 'shsirahaman.csc@gmail.com';
+    const userRole = isAdmin ? 'admin' : (profile?.role || 'technician');
+
     if (!profile) {
        // Profile doesn't exist yet, likely due to replication delay.
        // Return a temporary user object. The onAuthStateChange listener will eventually get the correct profile.
-       const isPotentiallyAdmin = sbUser.email === 'shsirahaman.csc@gmail.com';
        return {
         id: sbUser.id,
         email: sbUser.email!,
         name: sbUser.user_metadata?.name || sbUser.email!,
-        role: isPotentiallyAdmin ? 'admin' : 'technician', // Grant admin role based on email
+        role: userRole,
         avatarUrl: sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${sbUser.email!}`,
         status: 'Active',
       };
     }
 
-    // Special case for the admin user
-    const userRole = sbUser.email === 'shsirahaman.csc@gmail.com' ? 'admin' : profile.role;
-
     return {
       id: sbUser.id,
       email: sbUser.email!,
       name: profile.name || sbUser.email!,
-      role: userRole || 'technician',
+      role: userRole,
       avatarUrl: profile.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.name}`,
       status: profile.status || 'Active',
     };

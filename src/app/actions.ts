@@ -229,3 +229,39 @@ export async function deleteUserAction(userId: string) {
     revalidatePath('/users');
     return { success: true };
 }
+
+const profileSchema = z.object({
+  name: z.string().min(1, 'Name is required.'),
+});
+
+export async function updateProfileAction(prevState: any, formData: FormData) {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { message: 'Not authenticated', errors: null };
+    }
+
+    const validatedFields = profileSchema.safeParse({
+      name: formData.get('name')
+    });
+
+    if (!validatedFields.success) {
+        return {
+            message: 'Validation failed',
+            errors: validatedFields.error.flatten().fieldErrors,
+        };
+    }
+    
+    const { error } = await supabase
+      .from('users')
+      .update({ name: validatedFields.data.name })
+      .eq('id', user.id);
+
+    if (error) {
+        return { message: error.message, errors: null };
+    }
+
+    revalidatePath('/settings');
+    return { message: 'Profile updated successfully', errors: null };
+}

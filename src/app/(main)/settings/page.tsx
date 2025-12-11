@@ -6,22 +6,48 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/hooks';
-import { Sun, Moon, Laptop } from 'lucide-react';
+import { Sun, Moon, Laptop, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { version } from '../../../../package.json';
+import { useFormState, useFormStatus } from 'react-dom';
+import { updateProfileAction } from '@/app/actions';
+import { useEffect } from 'react';
+
+const initialState = {
+  message: '',
+  errors: null,
+};
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+      Save Changes
+    </Button>
+  );
+}
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const { setTheme } = useTheme();
   const { toast } = useToast();
+  const [state, formAction] = useFormState(updateProfileAction, initialState);
 
-  const handleProfileUpdate = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: 'Profile Updated!',
-      description: 'Your profile information has been successfully updated (simulated).',
-    });
-  };
+   useEffect(() => {
+    if (state.message === 'Profile updated successfully') {
+      toast({
+        title: 'Profile Updated!',
+        description: 'Your profile information has been successfully updated.',
+      });
+    } else if (state.message) {
+      toast({
+        title: 'Error',
+        description: state.message,
+        variant: 'destructive',
+      });
+    }
+  }, [state, toast]);
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -35,19 +61,20 @@ export default function SettingsPage() {
           <CardTitle>Profile</CardTitle>
           <CardDescription>This is how others will see you on the site.</CardDescription>
         </CardHeader>
-        <form onSubmit={handleProfileUpdate}>
+        <form action={formAction}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" defaultValue={user?.name || ''} />
+              <Input id="name" name="name" defaultValue={user?.name || ''} />
+              {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue={user?.email || ''} />
+              <Input id="email" type="email" defaultValue={user?.email || ''} disabled />
             </div>
           </CardContent>
           <CardFooter className="border-t px-6 py-4">
-            <Button>Save Changes</Button>
+            <SubmitButton />
           </CardFooter>
         </form>
       </Card>

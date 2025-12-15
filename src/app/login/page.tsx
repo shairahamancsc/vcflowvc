@@ -1,9 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
 import { Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
@@ -90,6 +91,16 @@ export default function LoginPage() {
             </Button>
           </form>
         </CardContent>
+        <CardFooter className="flex-col items-center justify-center text-sm">
+          <p className="text-muted-foreground">
+            {"Don't have an account?"}
+            <Button variant="link" asChild className="p-1">
+              <Link href="/signup">
+                Sign up
+              </Link>
+            </Button>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

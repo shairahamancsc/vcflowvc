@@ -10,14 +10,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { createUserAction } from '@/app/actions';
+import { upsertUserAction } from '@/app/actions';
+import { User } from '@/lib/types';
 
-function SubmitButton() {
+interface UserFormProps {
+  user?: User;
+}
+
+function SubmitButton({ isEditing }: { isEditing: boolean }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending} className="w-full sm:w-auto">
       {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-      Create User
+      {isEditing ? 'Save Changes' : 'Create User'}
     </Button>
   );
 }
@@ -28,17 +33,18 @@ const initialState = {
 };
 
 
-export function UserForm() {
+export function UserForm({ user }: UserFormProps) {
+  const isEditing = !!user;
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
   const router = useRouter();
-  const [state, formAction] = useActionState(createUserAction, initialState);
+  const [state, formAction] = useActionState(upsertUserAction, initialState);
 
   useEffect(() => {
-    if (state.message === 'User created successfully') {
+    if (state.message === 'User created successfully' || state.message === 'User updated successfully') {
       toast({
         title: 'Success!',
-        description: 'New user has been created.',
+        description: state.message,
       });
       formRef.current?.reset();
       router.push('/users');
@@ -54,33 +60,31 @@ export function UserForm() {
 
   return (
     <form ref={formRef} action={formAction}>
+       {isEditing && <input type="hidden" name="id" value={user.id} />}
       <Card className="shadow-md w-full">
         <CardHeader>
-          <CardTitle>New User</CardTitle>
-          <CardDescription>Fill out the details below to create a new user account.</CardDescription>
+          <CardTitle>{isEditing ? 'Edit User' : 'New User'}</CardTitle>
+          <CardDescription>
+            {isEditing ? 'Update the details for this user.' : 'Fill out the details below to create a new user account.'}
+            </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" name="name" placeholder="e.g., Jane Doe" required />
+              <Input id="name" name="name" placeholder="e.g., Jane Doe" required defaultValue={user?.name}/>
                {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" placeholder="e.g., jane@example.com" required />
+              <Input id="email" name="email" type="email" placeholder="e.g., jane@example.com" required defaultValue={user?.email} disabled={isEditing} />
               {state?.errors?.email && <p className="text-sm text-destructive">{state.errors.email[0]}</p>}
             </div>
           </div>
            <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" name="phone" type="tel" placeholder="e.g., 555-123-4567" />
-               {state?.errors?.phone && <p className="text-sm text-destructive">{state.errors.phone[0]}</p>}
-            </div>
              <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
-                <Select name="role" required defaultValue="technician">
+                <Select name="role" required defaultValue={user?.role || 'technician'}>
                   <SelectTrigger id="role">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
@@ -91,18 +95,18 @@ export function UserForm() {
                 </Select>
                  {state?.errors?.role && <p className="text-sm text-destructive">{state.errors.role[0]}</p>}
               </div>
-          </div>
-           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required />
-              {state?.errors?.password && <p className="text-sm text-destructive">{state.errors.password[0]}</p>}
-            </div>
+               {!isEditing && (
+                <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input id="password" name="password" type="password" required={!isEditing} />
+                    {state?.errors?.password && <p className="text-sm text-destructive">{state.errors.password[0]}</p>}
+                </div>
+               )}
           </div>
           {state?.errors?.server && <p className="text-sm text-destructive">{state.errors.server[0]}</p>}
         </CardContent>
         <CardFooter className="flex justify-end">
-          <SubmitButton />
+          <SubmitButton isEditing={isEditing} />
         </CardFooter>
       </Card>
     </form>

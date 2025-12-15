@@ -5,6 +5,9 @@ import { z } from 'zod';
 import type { ServiceRequest } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import {
+  AuthApiError
+} from '@supabase/supabase-js';
 
 const requestSchema = z.object({
   requestText: z.string().min(10, 'Please provide more detail in your request.'),
@@ -48,7 +51,7 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
   try {
     const aiResult = await summarizeServiceRequest({ requestText });
     
-    const newRequest: Omit<ServiceRequest, 'id' | 'createdAt' | 'updated_at' | 'clientName' | 'assignedToName'> = {
+    const newRequest: Omit<ServiceRequest, 'id' | 'createdAt' | 'updated_at' | 'clientName' | 'assignedToName' | 'completedAt'> = {
       title,
       description: requestText,
       clientId,
@@ -114,6 +117,19 @@ export async function createClientAction(prevState: any, formData: FormData) {
     return { message: 'Client created successfully', errors: null };
 }
 
+export async function deleteClientAction(clientId: string) {
+    const supabase = createClient();
+    const { error } = await supabase.from('clients').delete().eq('id', clientId);
+
+    if (error) {
+      return { success: false, message: error.message };
+    }
+
+    revalidatePath('/clients');
+    return { success: true };
+}
+
+
 const dealerSchema = z.object({
   name: z.string().min(1, 'Company Name is required.'),
   email: z.string().email('Invalid email address.'),
@@ -141,6 +157,18 @@ export async function createDealerAction(prevState: any, formData: FormData) {
     return { message: 'Dealer created successfully', errors: null };
 }
 
+export async function deleteDealerAction(dealerId: string) {
+    const supabase = createClient();
+    const { error } = await supabase.from('dealers').delete().eq('id', dealerId);
+
+    if (error) {
+      return { success: false, message: error.message };
+    }
+
+    revalidatePath('/dealers');
+    return { success: true };
+}
+
 export async function updateServiceRequestStatus(requestId: string, status: ServiceRequest['status']) {
   const supabase = createClient();
   const { error } = await supabase
@@ -159,15 +187,23 @@ export async function updateServiceRequestStatus(requestId: string, status: Serv
 }
 
 const userSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(1, 'Name is required.'),
   email: z.string().email('Invalid email address.'),
-  phone: z.string().optional(),
-  role: z.enum(['admin', 'technician', 'customer']),
-  password: z.string().min(8, 'Password must be at least 8 characters.'),
+  role: z.enum(['admin', 'technician']),
+  password: z.string().min(8, 'Password must be at least 8 characters.').optional(),
 });
 
-export async function createUserAction(prevState: any, formData: FormData) {
-    const validatedFields = userSchema.safeParse(Object.fromEntries(formData.entries()));
+export async function upsertUserAction(prevState: any, formData: FormData) {
+    const supabase = createClient();
+    const formObject = Object.fromEntries(formData.entries());
+    
+    // If there's an ID, we're updating. Don't require password.
+    const finalUserSchema = formObject.id 
+      ? userSchema 
+      : userSchema.refine(data => data.password, { message: "Password is required for new users." });
+
+    const validatedFields = finalUserSchema.safeParse(formObject);
 
     if (!validatedFields.success) {
         return {
@@ -176,30 +212,48 @@ export async function createUserAction(prevState: any, formData: FormData) {
         };
     }
     
-    const { name, email, password, role } = validatedFields.data;
-    const supabase = createClient();
-    
-    const { data: authUser, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-            data: {
-                name,
-                role,
-                avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${name}`
-            }
-        }
-    });
+    const { id, name, email, role, password } = validatedFields.data;
 
-    if (authError || !authUser.user) {
-         return { message: authError?.message || 'Could not authenticate user.', errors: null };
+    if (id) {
+        // Update user in public.users table
+        const { error } = await supabase
+            .from('users')
+            .update({ name, role })
+            .eq('id', id);
+
+        if (error) {
+            return { message: error.message, errors: null };
+        }
+
+        revalidatePath('/users');
+        revalidatePath(`/users/${id}/edit`);
+        return { message: 'User updated successfully', errors: null };
+    } else {
+        // Create new user
+        const { data: authUser, error: authError } = await supabase.auth.signUp({
+            email,
+            password: password!,
+            options: {
+                data: {
+                    name,
+                    role,
+                    avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${name}`
+                }
+            }
+        });
+
+        if (authError) {
+          if (authError instanceof AuthApiError && authError.code === 'email_exists') {
+            return { message: 'A user with this email already exists. Please use a different email.', errors: null };
+          }
+          return { message: authError.message || 'Could not authenticate user.', errors: null };
+        }
+        
+        revalidatePath('/users');
+        return { message: 'User created successfully', errors: null };
     }
-    
-    // Also insert into public users table which is handled by the trigger `handle_new_user`
-    
-    revalidatePath('/users');
-    return { message: 'User created successfully', errors: null };
 }
+
 
 export async function updateUserStatusAction(userId: string, status: 'Active' | 'Blocked') {
   const supabase = createClient();
@@ -217,17 +271,21 @@ export async function updateUserStatusAction(userId: string, status: 'Active' | 
 }
 
 export async function deleteUserAction(userId: string) {
-    // Deleting a user from auth.users requires the Admin SDK, which is not available.
-    // We will just delete from our public `users` table.
     const supabase = createClient();
-    const { error } = await supabase.from('users').delete().eq('id', userId);
+    
+    // First, delete from public.users table. This should cascade if set up, but we do it explicitly.
+    const { error: publicError } = await supabase.from('users').delete().eq('id', userId);
 
-     if (error) {
-        return { success: false, message: error.message };
+    if (publicError) {
+        console.error('Error deleting from public.users:', publicError);
+        return { success: false, message: `Failed to delete user profile: ${publicError.message}` };
     }
+    
+    // Note: Deleting from auth.users requires admin privileges and is a separate, more complex operation.
+    // For this app, we will only remove them from the public table, effectively soft-deleting them from the app's view.
 
     revalidatePath('/users');
-    return { success: true };
+    return { success: true, message: 'User deleted successfully.' };
 }
 
 const profileSchema = z.object({
@@ -253,15 +311,70 @@ export async function updateProfileAction(prevState: any, formData: FormData) {
         };
     }
     
-    const { error } = await supabase
+    // Update user in auth
+    const { error: authError } = await supabase.auth.updateUser({ 
+        data: { name: validatedFields.data.name } 
+    });
+
+    if(authError) {
+      return { message: authError.message, errors: null };
+    }
+
+    // Update user in public users table
+    const { error: dbError } = await supabase
       .from('users')
       .update({ name: validatedFields.data.name })
       .eq('id', user.id);
 
-    if (error) {
-        return { message: error.message, errors: null };
+    if (dbError) {
+        return { message: dbError.message, errors: null };
     }
 
     revalidatePath('/settings');
     return { message: 'Profile updated successfully', errors: null };
+}
+
+export async function signUpAction(prevState: any, formData: FormData) {
+  const supabase = createClient();
+  const schema = z.object({
+    name: z.string().min(1, 'Name is required'),
+    email: z.string().email(),
+    password: z.string().min(8, 'Password must be at least 8 characters.'),
+  });
+
+  const validatedFields = schema.safeParse(Object.fromEntries(formData.entries()));
+
+  if (!validatedFields.success) {
+    return {
+      message: 'Validation failed.',
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const { name, email, password } = validatedFields.data;
+
+  // The admin user is a special case and should be created with the 'admin' role.
+  const role = email === 'shsirahaman.csc@gmail.com' ? 'admin' : 'technician';
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        name,
+        role,
+        avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${name}`,
+      },
+    },
+  });
+
+  if (error) {
+    return {
+      message: error.message,
+      errors: null,
+    };
+  }
+
+  revalidatePath('/');
+  return { message: 'Sign up successful! Please check your email to confirm your account.', errors: null };
 }

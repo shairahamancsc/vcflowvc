@@ -15,15 +15,34 @@ import {
     DropdownMenuSeparator,
   } from '@/components/ui/dropdown-menu';
   import { Button } from '@/components/ui/button';
-  import { MoreHorizontal } from 'lucide-react';
+  import { MoreHorizontal, Trash2, Loader2 } from 'lucide-react';
   import { Dealer } from '@/lib/types';
   import { format } from 'date-fns';
+  import { useTransition, useState } from 'react';
+  import { deleteDealerAction } from '@/app/actions';
+  import { useToast } from '@/hooks/use-toast';
   
   interface DealersTableProps {
     dealers: Dealer[];
   }
   
-  export function DealersTable({ dealers }: DealersTableProps) {
+  export function DealersTable({ dealers: initialDealers }: DealersTableProps) {
+    const [dealers, setDealers] = useState<Dealer[]>(initialDealers);
+    const [isPending, startTransition] = useTransition();
+    const { toast } = useToast();
+
+    const handleDelete = (dealerId: string) => {
+      startTransition(async () => {
+        const result = await deleteDealerAction(dealerId);
+        if (result.success) {
+          setDealers(dealers.filter(d => d.id !== dealerId));
+          toast({ title: 'Success', description: 'Dealer deleted.' });
+        } else {
+          toast({ title: 'Error', description: result.message, variant: 'destructive' });
+        }
+      });
+    };
+
     return (
       <Table>
         <TableHeader>
@@ -47,17 +66,22 @@ import {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
                       <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
+                      {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem>View Details</DropdownMenuItem>
                     <DropdownMenuItem>Manage Invoices</DropdownMenuItem>
-                    <DropdownMenuItem>Pickup Requests</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>Chat</DropdownMenuItem>
-                    <DropdownMenuItem>View Analytics</DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => handleDelete(dealer.id)}
+                      disabled={isPending}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Dealer
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

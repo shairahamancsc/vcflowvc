@@ -12,17 +12,37 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Trash2, Loader2 } from 'lucide-react';
 import { Client } from '@/lib/types';
 import { format } from 'date-fns';
+import { useTransition, useState } from 'react';
+import { deleteClientAction } from '@/app/actions';
+import { useToast } from '@/hooks/use-toast';
 
 interface ClientsTableProps {
   clients: Client[];
 }
 
-export function ClientsTable({ clients }: ClientsTableProps) {
+export function ClientsTable({ clients: initialClients }: ClientsTableProps) {
+  const [clients, setClients] = useState<Client[]>(initialClients);
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
+
+  const handleDelete = (clientId: string) => {
+    startTransition(async () => {
+      const result = await deleteClientAction(clientId);
+      if (result.success) {
+        setClients(clients.filter(c => c.id !== clientId));
+        toast({ title: 'Success', description: 'Client deleted.' });
+      } else {
+        toast({ title: 'Error', description: result.message, variant: 'destructive' });
+      }
+    });
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -46,13 +66,22 @@ export function ClientsTable({ clients }: ClientsTableProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-8 w-8 p-0">
                     <span className="sr-only">Open menu</span>
-                    <MoreHorizontal className="h-4 w-4" />
+                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuItem>View Client</DropdownMenuItem>
                   <DropdownMenuItem>Edit Client</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() => handleDelete(client.id)}
+                    disabled={isPending}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Client
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </TableCell>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -18,18 +19,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Loader2, Edit, Trash2 } from 'lucide-react';
 import type { User } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { deleteUserAction, updateUserStatusAction } from '@/app/actions';
+import { useAuth } from '@/lib/hooks';
 
 interface UsersTableProps {
   users: User[];
 }
 
 export function UsersTable({ users: initialUsers }: UsersTableProps) {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState(
     initialUsers.map(u => ({...u, status: u.status || 'Active' }))
   );
@@ -59,7 +62,6 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
       }
     });
   }
-
 
   return (
     <Table>
@@ -93,14 +95,19 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
             <TableCell className="text-right">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
+                  <Button variant="ghost" className="h-8 w-8 p-0" disabled={user.id === currentUser?.id}>
                     <span className="sr-only">Open menu</span>
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem disabled={isPending}>Edit User</DropdownMenuItem>
+                  <DropdownMenuItem asChild disabled={isPending}>
+                    <Link href={`/users/${user.id}/edit`}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit User
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {user.status === 'Active' ? (
                      <DropdownMenuItem disabled={isPending} onClick={() => handleStatusChange(user.id, 'Blocked')}>
@@ -116,6 +123,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
                     disabled={isPending}
                     onClick={() => handleDelete(user.id)}
                   >
+                    <Trash2 className="mr-2 h-4 w-4" />
                     Delete User
                   </DropdownMenuItem>
                 </DropdownMenuContent>

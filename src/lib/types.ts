@@ -2,7 +2,7 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'technician' | 'customer';
+  role: 'admin' | 'technician';
   avatarUrl: string;
   status?: 'Active' | 'Blocked';
   phone?: string;
@@ -92,13 +92,14 @@ export type Database = {
       }
       service_requests: {
         Row: ServiceRequest
-        Insert: Omit<ServiceRequest, 'id' | 'createdAt' | 'updated_at' | 'clientName' | 'assignedToName'>
-        Update: Partial<Omit<ServiceRequest, 'id' | 'createdAt' | 'updated_at' | 'clientName' | 'assignedToName'>>
+        Insert: Omit<ServiceRequest, 'id' | 'createdAt' | 'updated_at' | 'clientName' | 'assignedToName' | 'completedAt'>
+        Update: Partial<Omit<ServiceRequest, 'id' | 'createdAt' | 'updated_at' | 'clientName' | 'assignedToName' | 'completedAt'>>
       }
       users: {
         Row: {
           id: string
           name: string
+          email: string
           role: User['role']
           avatar_url: string,
           status: 'Active' | 'Blocked'

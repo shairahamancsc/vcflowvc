@@ -27,19 +27,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Definitive fix: Check for the admin email first and return immediately if it matches.
     if (sbUser.email === 'shsirahaman.csc@gmail.com') {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('name, avatar_url, status')
-        .eq('id', sbUser.id)
-        .maybeSingle();
-
+      const userName = sbUser.user_metadata?.name || sbUser.email!;
       return {
         id: sbUser.id,
         email: sbUser.email,
-        name: profile?.name || sbUser.user_metadata?.name || sbUser.email,
-        role: 'admin', // Force the role to admin.
-        avatarUrl: profile?.avatar_url || sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.name || sbUser.email}`,
-        status: profile?.status || 'Active',
+        name: userName,
+        role: 'admin', // Force the role to admin and do not query the db.
+        avatarUrl: sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${userName}`,
+        status: 'Active',
       };
     }
     
@@ -56,13 +51,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Default to 'technician' if profile or role is missing for non-admin users.
     const userRole = profile?.role || 'technician';
+    const userName = profile?.name || sbUser.user_metadata?.name || sbUser.email!;
 
     return {
       id: sbUser.id,
       email: sbUser.email!,
-      name: profile?.name || sbUser.user_metadata?.name || sbUser.email!,
+      name: userName,
       role: userRole,
-      avatarUrl: profile?.avatar_url || sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.name || sbUser.email!}`,
+      avatarUrl: profile?.avatar_url || sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${userName}`,
       status: profile?.status || 'Active',
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps

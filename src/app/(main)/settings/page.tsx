@@ -9,9 +9,9 @@ import { useAuth } from '@/lib/hooks';
 import { Sun, Moon, Laptop, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { version } from '../../../../package.json';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useEffect } from 'react';
+import { useFormStatus } from 'react-dom';
 import { updateProfileAction } from '@/app/actions';
-import { useEffect } from 'react';
 
 const initialState = {
   message: '',
@@ -32,7 +32,7 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const { setTheme } = useTheme();
   const { toast } = useToast();
-  const [state, formAction] = useFormState(updateProfileAction, initialState);
+  const [state, formAction] = useActionState(updateProfileAction, initialState);
 
    useEffect(() => {
     if (state.message === 'Profile updated successfully') {

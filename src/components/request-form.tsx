@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useEffect, useRef, useState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { summarizeAndCreateRequest } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useEffect, useRef, useState } from 'react';
 import { Wand2, Loader2, Frown, Smile, Meh } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -43,7 +43,7 @@ function SentimentIcon({ sentiment }: { sentiment: string | null }) {
 
 
 export function RequestForm() {
-  const [formState, formAction] = useFormState(summarizeAndCreateRequest, initialState);
+  const [formState, formAction] = useActionState(summarizeAndCreateRequest, initialState);
   const [description, setDescription] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();

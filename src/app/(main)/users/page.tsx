@@ -1,32 +1,28 @@
-'use client';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { UsersTable } from '@/components/users-table';
 import Link from 'next/link';
 import { User } from '@/lib/types';
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/server';
 
-export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  
-  useEffect(() => {
-    const getUsers = async () => {
-      const supabase = createClient();
-      const { data } = await supabase.from('users').select('*');
-      const appUsers = data?.map(u => ({
-        id: u.id,
-        name: u.name,
-        email: u.email || '',
-        role: u.role,
-        avatarUrl: u.avatar_url || '',
-        status: u.status || 'Active',
-      })) || [];
-      setUsers(appUsers);
-    };
-    getUsers();
-  }, []);
+async function getUsers() {
+    const supabase = createClient();
+    const { data } = await supabase.from('users').select('*');
+    const appUsers: User[] = data?.map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email || '',
+      role: u.role,
+      avatarUrl: u.avatar_url || '',
+      status: u.status || 'Active',
+    })) || [];
+    return appUsers;
+}
+
+export default async function UsersPage() {
+  const users = await getUsers();
   
   return (
     <div className="space-y-6">

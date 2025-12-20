@@ -1,3 +1,4 @@
+
 'use client';
 import { StatCard } from './stat-card';
 import { PerformanceChart } from './performance-chart';
@@ -21,7 +22,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useState } from 'react';
 import { ServiceRequest, User } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
 
 interface TechDashboardProps {
   requests: ServiceRequest[];
@@ -29,7 +29,7 @@ interface TechDashboardProps {
 }
 
 export function TechDashboard({ requests: allRequests, users }: TechDashboardProps) {
-  const { user } = useAuth();
+  const { user } = useAuth(); // We still need the user on the client for personalization
   const [tasks, setTasks] = useState<ServiceRequest[]>([]);
 
   useEffect(() => {

@@ -1,24 +1,20 @@
-'use client';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { DealersTable } from '@/components/dealers-table';
 import Link from 'next/link';
 import { Dealer } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
-import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/server';
 
-export default function DealersPage() {
-  const [dealers, setDealers] = useState<Dealer[]>([]);
-  
-  useEffect(() => {
-    const getDealers = async () => {
-      const supabase = createClient();
-      const { data } = await supabase.from('dealers').select('*');
-      setDealers(data || []);
-    };
-    getDealers();
-  }, []);
+async function getDealers() {
+  const supabase = createClient();
+  const { data } = await supabase.from('dealers').select('*');
+  return data || [];
+}
+
+export default async function DealersPage() {
+  const dealers: Dealer[] = await getDealers();
   
   return (
     <div className="space-y-6">

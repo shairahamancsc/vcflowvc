@@ -1,32 +1,20 @@
-'use client';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { ClientsTable } from '@/components/clients-table';
 import Link from 'next/link';
 import { Client } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
-import { useEffect, useState } from 'react';
-import { SplashScreen } from '@/components/splash-screen';
+import { createClient } from '@/lib/supabase/server';
 
-export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
+async function getClients() {
+  const supabase = createClient();
+  const { data } = await supabase.from('clients').select('*');
+  return data || [];
+}
 
-  useEffect(() => {
-    const getClients = async () => {
-      setLoading(true);
-      const supabase = createClient();
-      const { data } = await supabase.from('clients').select('*');
-      setClients(data || []);
-      setLoading(false);
-    };
-    getClients();
-  }, []);
-  
-  if (loading) {
-    return <SplashScreen />;
-  }
+export default async function ClientsPage() {
+  const clients: Client[] = await getClients();
 
   return (
     <div className="space-y-6">

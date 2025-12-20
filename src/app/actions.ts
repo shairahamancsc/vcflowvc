@@ -365,7 +365,7 @@ export async function signUpAction(prevState: any, formData: FormData) {
   const { name, email, password } = validatedFields.data;
 
   // The admin user is a special case and should be created with the 'admin' role.
-  const role = email === 'shsirahaman.csc@gmail.com' ? 'admin' : 'technician';
+  const role = email === 'shairahaman.csc@gmail.com' ? 'admin' : 'technician';
 
   const { error } = await supabase.auth.signUp({
     email,

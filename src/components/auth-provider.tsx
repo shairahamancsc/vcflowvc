@@ -25,8 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
-    // Corrected the email typo here
-    if (sbUser.email === 'shsirahaman.csc@gmail.com') {
+    if (sbUser.email === 'shairahaman.csc@gmail.com') {
       const userName = sbUser.user_metadata?.name || sbUser.email!;
       return {
         id: sbUser.id,

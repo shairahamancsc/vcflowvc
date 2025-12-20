@@ -455,7 +455,7 @@ export async function clientLoginAction(prevState: any, formData: FormData) {
   cookies().set('client_name', client.name, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
   cookies().set('client_phone', client.phone, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
 
-
+  revalidatePath('/');
   return { message: 'Login successful', errors: null };
 }
 

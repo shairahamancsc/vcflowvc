@@ -39,10 +39,11 @@ export default function CustomerLoginPage() {
     if (state.message === 'Login successful') {
       toast({
         title: 'Success!',
-        description: 'You are now logged in.',
+        description: 'You are now logged in. Redirecting...',
       });
       formRef.current?.reset();
-      router.push('/portal');
+      // Use router.refresh() to re-run the middleware and get redirected
+      router.refresh();
     } else if (state.message) {
       toast({
         title: 'Error',

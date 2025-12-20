@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import {
   AuthApiError
 } from '@supabase/supabase-js';
+import { v4 as uuidv4 } from 'uuid';
 
 const requestSchema = z.object({
   requestText: z.string().min(10, 'Please provide more detail in your request.'),
@@ -107,7 +108,12 @@ export async function createClientAction(prevState: any, formData: FormData) {
     }
 
     const supabase = createClient();
-    const { error } = await supabase.from('clients').insert(validatedFields.data);
+    const clientData = {
+        ...validatedFields.data,
+        id: uuidv4(),
+    };
+
+    const { error } = await supabase.from('clients').insert(clientData);
 
     if (error) {
         return { message: error.message, errors: null };
@@ -145,9 +151,14 @@ export async function createDealerAction(prevState: any, formData: FormData) {
             errors: validatedFields.error.flatten().fieldErrors,
         };
     }
-
+    
     const supabase = createClient();
-    const { error } = await supabase.from('dealers').insert(validatedFields.data);
+    const dealerData = {
+        ...validatedFields.data,
+        id: uuidv4(),
+    };
+
+    const { error } = await supabase.from('dealers').insert(dealerData);
 
     if (error) {
         return { message: error.message, errors: null };

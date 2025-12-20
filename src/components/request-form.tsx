@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
@@ -14,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Client, User } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
+import { Combobox } from './ui/combobox';
 
 const initialState = {
   message: '',
@@ -88,6 +90,11 @@ export function RequestForm() {
         })
     }
   }, [formState, toast, router]);
+  
+  const clientOptions = clients.map(client => ({
+    value: client.id,
+    label: `${client.name} (${client.phone})`,
+  }));
 
   return (
     <form ref={formRef} action={formAction}>
@@ -100,16 +107,13 @@ export function RequestForm() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="client">Client</Label>
-              <Select name="client">
-                <SelectTrigger id="client">
-                  <SelectValue placeholder="Select a client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map(client => (
-                    <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+               <Combobox
+                options={clientOptions}
+                name="client"
+                placeholder="Select or type a phone number..."
+                searchPlaceholder="Search by name or phone..."
+                noResultsText="No client found. A new one will be created."
+              />
                {formState?.errors?.clientId && (
                 <p className="text-sm text-destructive">{formState.errors.clientId[0]}</p>
             )}

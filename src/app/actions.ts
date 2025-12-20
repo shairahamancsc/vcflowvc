@@ -1,3 +1,4 @@
+
 'use server';
 
 import { summarizeServiceRequest } from '@/ai/flows/summarize-service-request';
@@ -9,6 +10,7 @@ import {
   AuthApiError
 } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
+import { cookies } from 'next/headers';
 
 const requestSchema = z.object({
   requestText: z.string().min(10, 'Please provide more detail in your request.'),
@@ -48,17 +50,44 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
   
   const { requestText, title, clientId, priority, assignedToId } = validatedFields.data;
   const supabase = createClient();
+  let finalClientId = clientId;
 
   try {
+     // Check if the client is a phone number (indicating a new client)
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientId)) {
+        const phone = clientId;
+        // Check if a client with this phone number already exists
+        let { data: existingClient } = await supabase.from('clients').select('id').eq('phone', phone).single();
+
+        if (!existingClient) {
+            // Create a new client
+            const newClientData = { 
+              id: uuidv4(),
+              phone: phone,
+              // Populate name and email with placeholder if you don't collect them in the request form
+              name: `Client ${phone}`, 
+              email: `${phone}@example.com`,
+              address: 'N/A'
+            };
+            const { data: newClient, error: newClientError } = await supabase.from('clients').insert(newClientData).select('id').single();
+
+            if (newClientError) throw new Error(`Failed to create new client: ${newClientError.message}`);
+            finalClientId = newClient!.id;
+        } else {
+          finalClientId = existingClient.id;
+        }
+    }
+
+
     const aiResult = await summarizeServiceRequest({ requestText });
     
     const newRequest: Omit<ServiceRequest, 'id' | 'createdAt' | 'updated_at' | 'clientName' | 'assignedToName' | 'completedAt'> = {
       title,
       description: requestText,
-      clientId,
+      clientId: finalClientId,
       status: 'Pending',
       priority: priority as ServiceRequest['priority'],
-      assignedToId: assigneeId === 'unassigned' ? undefined : assigneeId,
+      assignedToId: assignedToId === 'unassigned' ? undefined : assignedToId,
       aiSummary: aiResult.summary,
       aiSentiment: aiResult.sentiment,
     };
@@ -71,6 +100,8 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
     
     revalidatePath('/requests');
     revalidatePath('/dashboard');
+    revalidatePath('/portal');
+
 
     return {
       message: 'Request created',
@@ -194,6 +225,7 @@ export async function updateServiceRequestStatus(requestId: string, status: Serv
 
   revalidatePath('/requests');
   revalidatePath('/dashboard');
+  revalidatePath('/portal');
   return { success: true };
 }
 
@@ -388,4 +420,99 @@ export async function signUpAction(prevState: any, formData: FormData) {
 
   revalidatePath('/');
   return { message: 'Sign up successful! Please check your email to confirm your account.', errors: null };
+}
+
+
+const clientLoginSchema = z.object({
+  phone: z.string().min(1, 'Phone number is required'),
+});
+
+export async function clientLoginAction(prevState: any, formData: FormData) {
+  const validatedFields = clientLoginSchema.safeParse(Object.fromEntries(formData.entries()));
+
+  if (!validatedFields.success) {
+    return {
+      message: 'Validation failed',
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const { phone } = validatedFields.data;
+  const supabase = createClient();
+
+  const { data: client, error } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('phone', phone)
+    .single();
+
+  if (error || !client) {
+    return { message: 'No client found with that phone number.', errors: null };
+  }
+
+  // Set a cookie to manage client session
+  cookies().set('client_id', client.id, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 }); // 24 hour session
+  cookies().set('client_name', client.name, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
+  cookies().set('client_phone', client.phone, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
+
+
+  return { message: 'Login successful', errors: null };
+}
+
+export async function clientLogoutAction() {
+  cookies().delete('client_id');
+  cookies().delete('client_name');
+  cookies().delete('client_phone');
+  revalidatePath('/');
+}
+
+// Action for customer to create a request from their portal
+export async function createRequestFromPortal(prevState: any, formData: FormData) {
+  const cookieStore = cookies();
+  const clientId = cookieStore.get('client_id')?.value;
+
+  if (!clientId) {
+    return { message: "Authentication error. Please log in again.", errors: null };
+  }
+
+  const portalRequestSchema = z.object({
+    title: z.string().min(1, 'Title is required.'),
+    description: z.string().min(10, 'Please provide more detail in your request.'),
+  });
+  
+  const validatedFields = portalRequestSchema.safeParse(Object.fromEntries(formData.entries()));
+
+  if (!validatedFields.success) {
+      return {
+          message: 'Validation failed',
+          errors: validatedFields.error.flatten().fieldErrors,
+      };
+  }
+
+  const { title, description } = validatedFields.data;
+  const supabase = createClient();
+
+  try {
+    const aiResult = await summarizeServiceRequest({ requestText: description });
+
+    const newRequest: Omit<ServiceRequest, 'id' | 'createdAt' | 'updated_at' | 'clientName' | 'assignedToName' | 'completedAt'> = {
+      title,
+      description,
+      clientId,
+      status: 'Pending',
+      priority: 'Medium', // Default priority for portal requests
+      aiSummary: aiResult.summary,
+      aiSentiment: aiResult.sentiment,
+    };
+    
+    const { error } = await supabase.from('service_requests').insert(newRequest);
+
+    if (error) throw new Error(error.message);
+
+    revalidatePath('/portal');
+    return { message: 'Request submitted successfully!', errors: null, summary: aiResult.summary, sentiment: aiResult.sentiment };
+  } catch (error: any) {
+    console.error('Portal request creation error:', error);
+    return { message: 'Failed to submit request.', errors: { server: [error.message] } };
+  }
 }

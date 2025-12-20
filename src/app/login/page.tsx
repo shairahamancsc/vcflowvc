@@ -1,8 +1,8 @@
+
 'use client';
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth, useAuthRedirect } from '@/lib/hooks';
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   useAuthRedirect({ to: '/dashboard', when: 'loggedIn' });
 
   const { toast } = useToast();
@@ -55,7 +55,7 @@ export default function LoginPage() {
           <div className="mx-auto mb-4">
              <Logo />
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl font-bold">Admin & Staff Login</CardTitle>
           <CardDescription>Sign in to access your dashboard.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -92,14 +92,12 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="flex-col items-center justify-center text-sm">
-          <p className="text-muted-foreground">
-            {"Don't have an account?"}
-            <Button variant="link" asChild className="p-1">
-              <Link href="/signup">
-                Sign up
-              </Link>
-            </Button>
-          </p>
+           <p className="text-muted-foreground text-xs">
+                Not an admin?{' '}
+                <Link href="/" className="underline hover:text-primary">
+                   Go to Customer Portal
+                </Link>
+            </p>
         </CardFooter>
       </Card>
     </div>

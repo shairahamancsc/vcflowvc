@@ -1,3 +1,4 @@
+
 import { useContext, useEffect } from 'react';
 import { AuthContext, AuthContextType } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
@@ -22,6 +23,8 @@ export function useAuthRedirect({ to, when }: { to: string, when: 'loggedIn' | '
     }
     
     if (when === 'loggedOut' && !user) {
+      // Check if current path is the customer portal root, if so, don't redirect
+      if (window.location.pathname === '/') return;
       router.push(to);
     }
   }, [user, loading, router, to, when]);

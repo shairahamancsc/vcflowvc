@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, UserPlus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -26,23 +26,41 @@ type ComboboxProps = {
   searchPlaceholder: string;
   noResultsText: string;
   name: string;
+  value: string;
+  onValueChange: (value: string) => void;
+  onCreateNew?: (value: string) => void;
 };
 
-export function Combobox({ options, placeholder, searchPlaceholder, noResultsText, name }: ComboboxProps) {
+export function Combobox({ 
+  options, 
+  placeholder, 
+  searchPlaceholder, 
+  noResultsText, 
+  name,
+  value,
+  onValueChange,
+  onCreateNew
+}: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
-  const [inputValue, setInputValue] = React.useState("")
-
+  const [search, setSearch] = React.useState("")
+  
   const handleSelect = (currentValue: string) => {
     const newValue = currentValue === value ? "" : currentValue;
-    setValue(newValue);
-    setInputValue(newValue);
+    onValueChange(newValue);
+    setSearch("");
     setOpen(false);
   }
 
+  const filteredOptions = options.filter(option => 
+    option.label.toLowerCase().includes(search.toLowerCase())
+  );
+  
+  const isPhoneNumber = /^[0-9\s+()-]+$/.test(search) && search.length >= 10;
+  const showCreateNew = onCreateNew && search && filteredOptions.length === 0 && isPhoneNumber;
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <input type="hidden" name={name} value={inputValue} />
+      <input type="hidden" name={name} value={value} />
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -57,24 +75,18 @@ export function Combobox({ options, placeholder, searchPlaceholder, noResultsTex
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        <Command shouldFilter={true} filter={(value, search) => {
-          const option = options.find(o => o.value === value);
-          if (option?.label.toLowerCase().includes(search.toLowerCase())) return 1;
-          return 0;
-        }}>
+        <Command>
           <CommandInput 
             placeholder={searchPlaceholder}
-            onValueChange={(search) => {
-              // Allow creating a new client if no option is selected
-              if (!options.some(o => o.label.toLowerCase() === search.toLowerCase())) {
-                setInputValue(search)
-              }
-            }}
+            value={search}
+            onValueChange={setSearch}
           />
           <CommandList>
-            <CommandEmpty>{noResultsText}</CommandEmpty>
+             {filteredOptions.length === 0 && !showCreateNew && (
+                <CommandEmpty>{noResultsText}</CommandEmpty>
+             )}
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}
@@ -89,6 +101,19 @@ export function Combobox({ options, placeholder, searchPlaceholder, noResultsTex
                   {option.label}
                 </CommandItem>
               ))}
+               {showCreateNew && (
+                <CommandItem
+                  onSelect={() => {
+                    onCreateNew(search);
+                    setOpen(false);
+                    setSearch('');
+                  }}
+                  className="text-primary hover:!bg-primary/10 cursor-pointer"
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Create new client with phone "{search}"
+                </CommandItem>
+              )}
             </CommandGroup>
           </CommandList>
         </Command>
@@ -96,3 +121,5 @@ export function Combobox({ options, placeholder, searchPlaceholder, noResultsTex
     </Popover>
   )
 }
+
+    

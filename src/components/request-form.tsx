@@ -10,12 +10,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Wand2, Loader2, Frown, Smile, Meh } from 'lucide-react';
+import { Wand2, Loader2, Frown, Smile, Meh, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Client, User } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import { Combobox } from './ui/combobox';
+import { NewClientDialog } from './new-client-dialog';
 
 const initialState = {
   message: '',
@@ -53,6 +54,9 @@ export function RequestForm() {
 
   const [clients, setClients] = useState<Client[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState('');
+  const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false);
+  const [newClientPhone, setNewClientPhone] = useState('');
   
   useEffect(() => {
     const fetchData = async () => {
@@ -97,106 +101,130 @@ export function RequestForm() {
     label: `${client.name} (${client.phone})`,
   }));
 
-  return (
-    <form ref={formRef} action={formAction}>
-      <Card className="shadow-md w-full">
-        <CardHeader>
-          <CardTitle>New Service Request</CardTitle>
-          <CardDescription>Fill out the details below to create a new service request.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="client">Client</Label>
-               <Combobox
-                options={clientOptions}
-                name="client"
-                placeholder="Select or type a phone number..."
-                searchPlaceholder="Search by name or phone..."
-                noResultsText="No client found. A new client will be created."
-              />
-               {formState?.errors?.clientId && (
-                <p className="text-sm text-destructive">{formState.errors.clientId[0]}</p>
-            )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title">Request Title</Label>
-              <Input id="title" name="title" placeholder="e.g., Server is down" />
-               {formState?.errors?.title && (
-                <p className="text-sm text-destructive">{formState.errors.title[0]}</p>
-            )}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              placeholder="Please provide a detailed description of the issue."
-              className="min-h-32"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-             {formState?.errors?.requestText && (
-                <p className="text-sm text-destructive">{formState.errors.requestText[0]}</p>
-            )}
-          </div>
-          
-          {formState.summary && (
-              <Card className="bg-primary/5 border-primary/20">
-                  <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                         <CardTitle className="text-base flex items-center gap-2">
-                            <Wand2 className="h-5 w-5 text-primary" />
-                            AI Summary
-                        </CardTitle>
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                            <SentimentIcon sentiment={formState.sentiment} />
-                            {formState.sentiment}
-                        </div>
-                      </div>
-                  </CardHeader>
-                  <CardContent>
-                      <p className="text-sm text-foreground/80">{formState.summary}</p>
-                  </CardContent>
-              </Card>
-          )}
+  const handleClientCreation = (phone: string) => {
+    setNewClientPhone(phone);
+    setIsNewClientDialogOpen(true);
+  }
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select name="priority" defaultValue="Medium">
-                <SelectTrigger id="priority">
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Low">Low</SelectItem>
-                  <SelectItem value="Medium">Medium</SelectItem>
-                  <SelectItem value="High">High</SelectItem>
-                </SelectContent>
-              </Select>
+  const onClientCreated = (newClient: Client) => {
+    setClients(prevClients => [...prevClients, newClient]);
+    setSelectedClientId(newClient.id);
+    setIsNewClientDialogOpen(false);
+  }
+
+  return (
+    <>
+      <NewClientDialog
+        open={isNewClientDialogOpen}
+        onOpenChange={setIsNewClientDialogOpen}
+        phone={newClientPhone}
+        onClientCreated={onClientCreated}
+      />
+      <form ref={formRef} action={formAction}>
+        <Card className="shadow-md w-full">
+          <CardHeader>
+            <CardTitle>New Service Request</CardTitle>
+            <CardDescription>Fill out the details below to create a new service request.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="client">Client</Label>
+                <Combobox
+                  name="client"
+                  value={selectedClientId}
+                  onValueChange={setSelectedClientId}
+                  options={clientOptions}
+                  placeholder="Select or type a phone number..."
+                  searchPlaceholder="Search by name or phone..."
+                  noResultsText="No client found."
+                  onCreateNew={handleClientCreation}
+                />
+                {formState?.errors?.clientId && (
+                  <p className="text-sm text-destructive">{formState.errors.clientId[0]}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="title">Request Title</Label>
+                <Input id="title" name="title" placeholder="e.g., Server is down" />
+                {formState?.errors?.title && (
+                  <p className="text-sm text-destructive">{formState.errors.title[0]}</p>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="assignee">Assign To</Label>
-              <Select name="assignee">
-                <SelectTrigger id="assignee">
-                  <SelectValue placeholder="Select a technician" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {users.filter(u => u.role === 'technician').map(tech => (
-                    <SelectItem key={tech.id} value={tech.id}>{tech.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                placeholder="Please provide a detailed description of the issue."
+                className="min-h-32"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+              {formState?.errors?.requestText && (
+                  <p className="text-sm text-destructive">{formState.errors.requestText[0]}</p>
+              )}
             </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">An AI summary will be generated from your description.</p>
-          <SubmitButton />
-        </CardFooter>
-      </Card>
-    </form>
+            
+            {formState.summary && (
+                <Card className="bg-primary/5 border-primary/20">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base flex items-center gap-2">
+                              <Wand2 className="h-5 w-5 text-primary" />
+                              AI Summary
+                          </CardTitle>
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                              <SentimentIcon sentiment={formState.sentiment} />
+                              {formState.sentiment}
+                          </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-foreground/80">{formState.summary}</p>
+                    </CardContent>
+                </Card>
+            )}
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="priority">Priority</Label>
+                <Select name="priority" defaultValue="Medium">
+                  <SelectTrigger id="priority">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="assignee">Assign To</Label>
+                <Select name="assignee">
+                  <SelectTrigger id="assignee">
+                    <SelectValue placeholder="Select a technician" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {users.filter(u => u.role === 'technician').map(tech => (
+                      <SelectItem key={tech.id} value={tech.id}>{tech.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">An AI summary will be generated from your description.</p>
+            <SubmitButton />
+          </CardFooter>
+        </Card>
+      </form>
+    </>
   );
 }
+
+    

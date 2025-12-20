@@ -3,7 +3,7 @@
 
 import { summarizeServiceRequest } from '@/ai/flows/summarize-service-request';
 import { z } from 'zod';
-import type { ServiceRequest } from '@/lib/types';
+import type { Client, ServiceRequest } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -50,39 +50,14 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
   
   const { requestText, title, clientId, priority, assignedToId } = validatedFields.data;
   const supabase = createClient();
-  let finalClientId = clientId;
-
+  
   try {
-     // If clientId is not a UUID, it's a new client phone number
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientId)) {
-        const phone = clientId;
-        
-        let { data: existingClient } = await supabase.from('clients').select('id').eq('phone', phone).single();
-
-        if (existingClient) {
-            finalClientId = existingClient.id;
-        } else {
-            const newClientData = { 
-              id: uuidv4(),
-              phone: phone,
-              name: `Client ${phone}`, 
-              email: `${phone}@example.com`,
-              address: 'N/A'
-            };
-            const { data: newClient, error: newClientError } = await supabase.from('clients').insert(newClientData).select('id').single();
-
-            if (newClientError) throw new Error(`Failed to create new client: ${newClientError.message}`);
-            finalClientId = newClient!.id;
-        }
-    }
-
-
     const aiResult = await summarizeServiceRequest({ requestText });
     
     const newRequest: Omit<ServiceRequest, 'id' | 'createdAt' | 'updated_at' | 'clientName' | 'assignedToName' | 'completedAt'> = {
       title,
       description: requestText,
-      clientId: finalClientId,
+      clientId: clientId,
       status: 'Pending',
       priority: priority as ServiceRequest['priority'],
       assignedToId: assignedToId === 'unassigned' ? undefined : assignedToId,
@@ -99,7 +74,7 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
     revalidatePath('/requests');
     revalidatePath('/dashboard');
     revalidatePath('/portal');
-    revalidatePath('/clients');
+    revalidatePath(`/clients/${clientId}`);
 
 
     return {
@@ -122,9 +97,9 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
 
 const clientSchema = z.object({
     name: z.string().min(1, 'Name is required.'),
-    email: z.string().email('Invalid email address.'),
+    email: z.string().email('Invalid email address.').optional().or(z.literal('')),
     phone: z.string().min(1, 'Phone is required.'),
-    address: z.string().min(1, 'Address is required.'),
+    address: z.string().optional(),
 });
 
 export async function createClientAction(prevState: any, formData: FormData) {
@@ -132,6 +107,7 @@ export async function createClientAction(prevState: any, formData: FormData) {
 
     if (!validatedFields.success) {
         return {
+            success: false,
             message: 'Validation failed',
             errors: validatedFields.error.flatten().fieldErrors,
         };
@@ -141,16 +117,18 @@ export async function createClientAction(prevState: any, formData: FormData) {
     const clientData = {
         ...validatedFields.data,
         id: uuidv4(),
+        address: validatedFields.data.address || 'N/A',
+        email: validatedFields.data.email || `${validatedFields.data.phone}@example.com`
     };
 
-    const { error } = await supabase.from('clients').insert(clientData);
+    const { data: newClient, error } = await supabase.from('clients').insert(clientData).select().single();
 
     if (error) {
-        return { message: error.message, errors: null };
+        return { success: false, message: error.message, errors: null };
     }
     
     revalidatePath('/clients');
-    return { message: 'Client created successfully', errors: null };
+    return { success: true, message: 'Client created successfully', errors: null, client: newClient as Client };
 }
 
 export async function deleteClientAction(clientId: string) {
@@ -501,7 +479,7 @@ export async function createRequestFromPortal(prevState: any, formData: FormData
       status: 'Pending',
       priority: 'Medium', // Default priority for portal requests
       aiSummary: aiResult.summary,
-      aiSentiment: aiResult.sentiment,
+      aiSentiment: ai.sentiment,
     };
     
     const { error } = await supabase.from('service_requests').insert(newRequest);
@@ -515,3 +493,5 @@ export async function createRequestFromPortal(prevState: any, formData: FormData
     return { message: 'Failed to submit request.', errors: { server: [error.message] } };
   }
 }
+
+    

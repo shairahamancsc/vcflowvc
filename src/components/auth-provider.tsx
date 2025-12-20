@@ -25,31 +25,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
-    // Definitive fix: Check for the admin email first and return immediately if it matches.
     if (sbUser.email === 'shsirahaman.csc@gmail.com') {
       const userName = sbUser.user_metadata?.name || sbUser.email!;
       return {
         id: sbUser.id,
         email: sbUser.email,
         name: userName,
-        role: 'admin', // Force the role to admin and do not query the db.
+        role: 'admin',
         avatarUrl: sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${userName}`,
         status: 'Active',
       };
     }
     
-    // For all other users, fetch their profile from the database.
     const { data: profile, error } = await supabase
       .from('users')
       .select('*')
       .eq('id', sbUser.id)
-      .maybeSingle(); 
+      .single(); 
     
     if (error) {
-      console.error('Error fetching user profile:', error, JSON.stringify(error, null, 2));
+      console.error('Error fetching user profile:', error);
+      // If profile doesn't exist, it might be a new user, so we create a partial profile.
     }
 
-    // Default to 'technician' if profile or role is missing for non-admin users.
     const userRole = profile?.role || 'technician';
     const userName = profile?.name || sbUser.user_metadata?.name || sbUser.email!;
 
@@ -61,19 +59,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       avatarUrl: profile?.avatar_url || sbUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${userName}`,
       status: profile?.status || 'Active',
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
-    const checkInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const activeUser = await getActiveUser(session?.user ?? null);
-      setUser(activeUser);
-      setLoading(false);
-    };
-
-    checkInitialSession();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         const activeUser = await getActiveUser(session?.user ?? null);
@@ -82,11 +70,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
     
+    // Check initial session
+    const checkInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const activeUser = await getActiveUser(session.user);
+        setUser(activeUser);
+      }
+      setLoading(false);
+    };
+
+    checkInitialSession();
+
     return () => {
       subscription?.unsubscribe();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [getActiveUser, supabase.auth]);
 
 
   const login = async (email: string, pass: string) => {

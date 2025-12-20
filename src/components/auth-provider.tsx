@@ -25,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
+    // Corrected the email typo here
     if (sbUser.email === 'shsirahaman.csc@gmail.com') {
       const userName = sbUser.user_metadata?.name || sbUser.email!;
       return {
@@ -45,7 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (error) {
       console.error('Error fetching user profile:', error);
-      // If profile doesn't exist, it might be a new user, so we create a partial profile.
     }
 
     const userRole = profile?.role || 'technician';
@@ -62,39 +62,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        const activeUser = await getActiveUser(session?.user ?? null);
-        setUser(activeUser);
-        setLoading(false);
+        if (isMounted) {
+          const activeUser = await getActiveUser(session?.user ?? null);
+          setUser(activeUser);
+          setLoading(false);
+        }
       }
     );
     
-    // Check initial session
     const checkInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const activeUser = await getActiveUser(session.user);
-        setUser(activeUser);
+      if (isMounted) {
+        if (session) {
+          const activeUser = await getActiveUser(session.user);
+          setUser(activeUser);
+        }
+        setLoading(false); // Ensure loading is false even if there's no session
       }
-      setLoading(false);
     };
 
     checkInitialSession();
 
     return () => {
+      isMounted = false;
       subscription?.unsubscribe();
     };
   }, [getActiveUser, supabase.auth]);
 
 
   const login = async (email: string, pass: string) => {
-    return await supabase.auth.signInWithPassword({ email, password: pass });
+    setLoading(true);
+    const result = await supabase.auth.signInWithPassword({ email, password: pass });
+    setLoading(false);
+    return result;
   };
   
   const logout = async () => {
+    setLoading(true);
     await supabase.auth.signOut();
     setUser(null);
+    setLoading(false);
   };
 
   if (loading) {

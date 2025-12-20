@@ -15,12 +15,13 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Trash2, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Trash2, Loader2, Edit } from 'lucide-react';
 import { Client } from '@/lib/types';
 import { format } from 'date-fns';
 import { useTransition, useState } from 'react';
 import { deleteClientAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 interface ClientsTableProps {
   clients: Client[];
@@ -57,7 +58,11 @@ export function ClientsTable({ clients: initialClients }: ClientsTableProps) {
       <TableBody>
         {clients.map((client) => (
           <TableRow key={client.id}>
-            <TableCell className="font-medium">{client.name}</TableCell>
+            <TableCell className="font-medium">
+                <Link href={`/clients/${client.id}`} className="hover:underline">
+                    {client.name}
+                </Link>
+            </TableCell>
             <TableCell>{client.email}</TableCell>
             <TableCell>{client.phone}</TableCell>
             <TableCell>{format(new Date(client.created_at), 'MMM d, yyyy')}</TableCell>
@@ -71,8 +76,12 @@ export function ClientsTable({ clients: initialClients }: ClientsTableProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem>View Client</DropdownMenuItem>
-                  <DropdownMenuItem>Edit Client</DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/clients/${client.id}`}>View Client</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                     <Link href="#">Edit Client</Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-destructive"

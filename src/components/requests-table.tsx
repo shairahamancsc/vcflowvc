@@ -35,6 +35,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { updateServiceRequestStatus } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
+import { usePathname } from 'next/navigation';
 
 
 function SentimentIcon({ sentiment }: { sentiment: string | null }) {
@@ -62,6 +63,7 @@ export function RequestsTable({ requests: initialRequests }: RequestsTableProps)
   const { toast } = useToast();
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
   const [isPending, startTransition] = useTransition();
+  const pathname = usePathname();
 
   const handleStatusChange = (requestId: string, status: ServiceRequest['status']) => {
     startTransition(async () => {
@@ -83,13 +85,14 @@ export function RequestsTable({ requests: initialRequests }: RequestsTableProps)
   }
 
   const isAdminOrTech = user?.role === 'admin' || user?.role === 'technician';
+  const showClientColumn = !pathname.includes('/clients/');
 
   return (
     <>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Client</TableHead>
+            {showClientColumn && <TableHead>Client</TableHead>}
             <TableHead>Title</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Priority</TableHead>
@@ -101,7 +104,7 @@ export function RequestsTable({ requests: initialRequests }: RequestsTableProps)
         <TableBody>
           {requests.map((request) => (
             <TableRow key={request.id}>
-              <TableCell className="font-medium">{request.clientName}</TableCell>
+              {showClientColumn && <TableCell className="font-medium">{request.clientName}</TableCell>}
               <TableCell>{request.title}</TableCell>
               <TableCell>
                 <StatusBadge status={request.status} />
@@ -153,7 +156,7 @@ export function RequestsTable({ requests: initialRequests }: RequestsTableProps)
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-4 text-sm">
-            <p><strong className="font-medium">Client:</strong> {selectedRequest?.clientName}</p>
+            {showClientColumn && <p><strong className="font-medium">Client:</strong> {selectedRequest?.clientName}</p>}
             <p><strong className="font-medium">Description:</strong> {selectedRequest?.description}</p>
             
             {selectedRequest?.aiSummary && (

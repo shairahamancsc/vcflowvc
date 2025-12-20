@@ -7,18 +7,26 @@ import Link from 'next/link';
 import { Client } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
+import { SplashScreen } from '@/components/splash-screen';
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const getClients = async () => {
+      setLoading(true);
       const supabase = createClient();
       const { data } = await supabase.from('clients').select('*');
       setClients(data || []);
+      setLoading(false);
     };
     getClients();
   }, []);
+  
+  if (loading) {
+    return <SplashScreen />;
+  }
 
   return (
     <div className="space-y-6">

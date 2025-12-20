@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { version } from '../../../package.json';
+import { version } from '../../package.json';
 import releaseNotes from '@/lib/release-notes.json';
 import {
   AlertDialog,

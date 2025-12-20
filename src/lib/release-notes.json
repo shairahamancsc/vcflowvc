@@ -1,0 +1,16 @@
+
+{
+  "notes": [
+    {
+      "version": "0.1.0",
+      "changes": [
+        "Initial release of VC Flow!",
+        "Admin and Technician dashboards for managing service requests.",
+        "Ability to manage clients, users, and dealers.",
+        "AI-powered summarization of service requests.",
+        "Customer portal for clients to track their requests.",
+        "Implemented 'What's New' popup to show recent updates."
+      ]
+    }
+  ]
+}

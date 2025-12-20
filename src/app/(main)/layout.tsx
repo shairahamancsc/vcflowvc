@@ -7,6 +7,7 @@ import { SidebarNav } from '@/components/sidebar-nav';
 import { Header } from '@/components/header';
 import { useAuth } from '@/lib/hooks';
 import { SplashScreen } from '@/components/splash-screen';
+import { WhatsNew } from '@/components/whats-new';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   useAuthRedirect({ to: '/login', when: 'loggedOut' });
@@ -18,6 +19,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
+      <WhatsNew />
       <aside className="hidden w-64 flex-col border-r bg-background sm:flex lg:w-72">
         <SidebarNav />
       </aside>

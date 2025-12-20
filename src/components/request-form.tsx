@@ -60,13 +60,14 @@ export function RequestForm() {
       const { data: clientsData } = await supabase.from('clients').select('*');
       setClients(clientsData || []);
 
-      const { data: usersData } = await supabase.from('users').select('*');
+      const { data: usersData } = await supabase.from('users').select('id, name, email, role, avatar_url, status');
        const appUsers = usersData?.map(u => ({
         id: u.id,
         name: u.name,
         email: u.email || '',
         role: u.role,
         avatarUrl: u.avatar_url || '',
+        status: u.status || 'Active',
       })) || [];
       setUsers(appUsers);
     };
@@ -112,7 +113,7 @@ export function RequestForm() {
                 name="client"
                 placeholder="Select or type a phone number..."
                 searchPlaceholder="Search by name or phone..."
-                noResultsText="No client found. A new one will be created."
+                noResultsText="No client found. A new client will be created."
               />
                {formState?.errors?.clientId && (
                 <p className="text-sm text-destructive">{formState.errors.clientId[0]}</p>

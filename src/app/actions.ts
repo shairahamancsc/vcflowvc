@@ -53,18 +53,18 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
   let finalClientId = clientId;
 
   try {
-     // Check if the client is a phone number (indicating a new client)
+     // If clientId is not a UUID, it's a new client phone number
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientId)) {
         const phone = clientId;
-        // Check if a client with this phone number already exists
+        
         let { data: existingClient } = await supabase.from('clients').select('id').eq('phone', phone).single();
 
-        if (!existingClient) {
-            // Create a new client
+        if (existingClient) {
+            finalClientId = existingClient.id;
+        } else {
             const newClientData = { 
               id: uuidv4(),
               phone: phone,
-              // Populate name and email with placeholder if you don't collect them in the request form
               name: `Client ${phone}`, 
               email: `${phone}@example.com`,
               address: 'N/A'
@@ -73,8 +73,6 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
 
             if (newClientError) throw new Error(`Failed to create new client: ${newClientError.message}`);
             finalClientId = newClient!.id;
-        } else {
-          finalClientId = existingClient.id;
         }
     }
 
@@ -101,6 +99,7 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
     revalidatePath('/requests');
     revalidatePath('/dashboard');
     revalidatePath('/portal');
+    revalidatePath('/clients');
 
 
     return {

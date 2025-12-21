@@ -42,7 +42,7 @@ export default function SignUpPage() {
         description: state.message,
       });
       formRef.current?.reset();
-      router.push('/admin/login');
+      router.push('/login');
     } else if (state.message) {
       toast({
         title: 'Error',
@@ -85,7 +85,7 @@ export default function SignUpPage() {
             <p className="text-muted-foreground text-sm">
               {'Already have an account? '}
               <Button variant="link" asChild className="p-0">
-                <Link href="/admin/login">
+                <Link href="/login">
                   Log in
                 </Link>
               </Button>

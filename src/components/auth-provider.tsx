@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -25,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
-    if (sbUser.email === 'shairahaman.csc@gmail.com') {
+    if (sbUser.email === 'shsirahaman.csc@gmail.com') {
       const userName = sbUser.user_metadata?.name || sbUser.email!;
       return {
         id: sbUser.id,

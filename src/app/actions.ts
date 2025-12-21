@@ -374,7 +374,7 @@ export async function signUpAction(prevState: any, formData: FormData) {
   const { name, email, password } = validatedFields.data;
 
   // The admin user is a special case and should be created with the 'admin' role.
-  const role = email === 'shairahaman.csc@gmail.com' ? 'admin' : 'technician';
+  const role = email === 'shsirahaman.csc@gmail.com' ? 'admin' : 'technician';
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -479,7 +479,7 @@ export async function createRequestFromPortal(prevState: any, formData: FormData
       status: 'Pending',
       priority: 'Medium', // Default priority for portal requests
       aiSummary: aiResult.summary,
-      aiSentiment: ai.sentiment,
+      aiSentiment: aiResult.sentiment,
     };
     
     const { error } = await supabase.from('service_requests').insert(newRequest);
@@ -493,5 +493,3 @@ export async function createRequestFromPortal(prevState: any, formData: FormData
     return { message: 'Failed to submit request.', errors: { server: [error.message] } };
   }
 }
-
-    

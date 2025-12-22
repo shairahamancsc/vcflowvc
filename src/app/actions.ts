@@ -1,4 +1,3 @@
-
 'use server';
 
 import { summarizeServiceRequest } from '@/ai/flows/summarize-service-request';
@@ -399,16 +398,16 @@ export async function signUpAction(prevState: any, formData: FormData) {
   return { message: 'Sign up successful! Please check your email to confirm your account.', errors: null };
 }
 
-
-const clientLoginSchema = z.object({
-  phone: z.string().min(1, 'Phone number is required'),
+const sendOtpSchema = z.object({
+  phone: z.string().min(10, 'Please enter a valid phone number including country code.'),
 });
 
-export async function clientLoginAction(prevState: any, formData: FormData) {
-  const validatedFields = clientLoginSchema.safeParse(Object.fromEntries(formData.entries()));
+export async function sendOtpAction(prevState: any, formData: FormData) {
+  const validatedFields = sendOtpSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
     return {
+      success: false,
       message: 'Validation failed',
       errors: validatedFields.error.flatten().fieldErrors,
     };
@@ -417,29 +416,93 @@ export async function clientLoginAction(prevState: any, formData: FormData) {
   const { phone } = validatedFields.data;
   const supabase = createClient();
 
-  const { data: client, error } = await supabase
-    .from('clients')
-    .select('*')
-    .eq('phone', phone)
-    .single();
+  // Ensure a client profile exists, or create one.
+  let { data: client } = await supabase.from('clients').select('id').eq('phone', phone).single();
 
-  if (error || !client) {
-    return { message: 'No client found with that phone number.', errors: null };
+  if (!client) {
+    const { data: newClient, error: createError } = await supabase
+      .from('clients')
+      .insert({ phone: phone, name: `Client (${phone})`, email: `${phone}@placeholder.com`, address: 'N/A' })
+      .select('id').single();
+    
+    if (createError) {
+      return { success: false, message: `Could not create client profile: ${createError.message}`, errors: null };
+    }
+    client = newClient;
   }
 
-  // Set a cookie to manage client session
-  cookies().set('client_id', client.id, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 }); // 24 hour session
-  cookies().set('client_name', client.name, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
-  cookies().set('client_phone', client.phone, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
+  const { error: otpError } = await supabase.auth.signInWithOtp({
+    phone,
+  });
 
-  revalidatePath('/');
-  return { message: 'Login successful', errors: null };
+  if (otpError) {
+    return { success: false, message: `Failed to send OTP: ${otpError.message}`, errors: null };
+  }
+
+  return { success: true, message: 'OTP sent successfully', errors: null };
 }
+
+const verifyOtpSchema = z.object({
+    phone: z.string(),
+    token: z.string().min(6, 'OTP must be 6 digits.').max(6, 'OTP must be 6 digits.'),
+});
+
+export async function verifyOtpAction(prevState: any, formData: FormData) {
+    const validatedFields = verifyOtpSchema.safeParse(Object.fromEntries(formData.entries()));
+
+    if (!validatedFields.success) {
+        return {
+            success: false,
+            message: 'Validation failed',
+            errors: validatedFields.error.flatten().fieldErrors,
+        };
+    }
+    const { phone, token } = validatedFields.data;
+    const supabase = createClient();
+
+    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+        phone,
+        token,
+        type: 'sms',
+    });
+    
+    if (verifyError) {
+        return { success: false, message: `Verification failed: ${verifyError.message}`, errors: null };
+    }
+
+    if (!data.session) {
+        return { success: false, message: 'Could not establish a session. Please try again.', errors: null };
+    }
+
+    // Now that the user is authenticated via OTP, find their client profile
+    const { data: client, error: clientError } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('phone', phone)
+      .single();
+
+    if (clientError || !client) {
+        return { success: false, message: 'Could not find a client profile for this phone number.', errors: null };
+    }
+
+    // Set a cookie to manage client session
+    cookies().set('client_id', client.id, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 }); // 24 hour session
+    cookies().set('client_name', client.name, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
+    cookies().set('client_phone', client.phone, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
+
+    revalidatePath('/');
+    return { success: true, message: 'Login successful', errors: null };
+}
+
 
 export async function clientLogoutAction() {
   cookies().delete('client_id');
   cookies().delete('client_name');
   cookies().delete('client_phone');
+  
+  const supabase = createClient();
+  await supabase.auth.signOut();
+
   revalidatePath('/');
 }
 

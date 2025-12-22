@@ -112,7 +112,7 @@ export default function CustomerLoginPage() {
                         <Input 
                             id="phone" 
                             name="phone" 
-                            placeholder="e.g., +15551234567" 
+                            placeholder="e.g., +919876543210" 
                             required 
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}

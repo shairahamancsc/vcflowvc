@@ -61,10 +61,10 @@ To add a new client:
 const { data: newClient, error } = await supabase
   .from('clients')
   .insert({
-    name: 'Jane Doe',
-    email: 'jane.doe@example.com',
-    phone: '555-010-0123',
-    address: '123 Innovation Drive'
+    name: 'Priya Sharma',
+    email: 'priya.sharma@example.com',
+    phone: '+919876543210',
+    address: '42, MG Road, Bangalore'
   })
   .select()
   .single();

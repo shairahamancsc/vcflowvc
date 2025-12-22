@@ -61,19 +61,19 @@ export function DealerForm() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Company Name</Label>
-              <Input id="name" name="name" placeholder="e.g., Parts & Pieces LLC" required />
+              <Input id="name" name="name" placeholder="e.g., Prakash Electronics" required />
                {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Contact Email</Label>
-              <Input id="email" name="email" type="email" placeholder="e.g., contact@parts.com" required />
+              <Input id="email" name="email" type="email" placeholder="e.g., contact@prakashelec.com" required />
               {state?.errors?.email && <p className="text-sm text-destructive">{state.errors.email[0]}</p>}
             </div>
           </div>
            <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" name="phone" type="tel" placeholder="e.g., 555-123-4567" required />
+              <Input id="phone" name="phone" type="tel" placeholder="e.g., +919876543210" required />
               {state?.errors?.phone && <p className="text-sm text-destructive">{state.errors.phone[0]}</p>}
             </div>
           </div>

@@ -73,12 +73,12 @@ export function UserForm({ user }: UserFormProps) {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" name="name" placeholder="e.g., Jane Doe" required defaultValue={user?.name}/>
+              <Input id="name" name="name" placeholder="e.g., Priya Sharma" required defaultValue={user?.name}/>
                {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" placeholder="e.g., jane@example.com" required defaultValue={user?.email} disabled={isEditing} />
+              <Input id="email" name="email" type="email" placeholder="e.g., priya@example.com" required defaultValue={user?.email} disabled={isEditing} />
               {state?.errors?.email && <p className="text-sm text-destructive">{state.errors.email[0]}</p>}
             </div>
           </div>

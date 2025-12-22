@@ -90,17 +90,17 @@ export function NewClientDialog({ open, onOpenChange, phone, onClientCreated }: 
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" name="name" placeholder="e.g., John Doe" required />
+              <Input id="name" name="name" placeholder="e.g., Ramesh Kumar" required />
               {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email Address (Optional)</Label>
-              <Input id="email" name="email" type="email" placeholder="e.g., john@example.com" />
+              <Input id="email" name="email" type="email" placeholder="e.g., ramesh@example.com" />
               {state?.errors?.email && <p className="text-sm text-destructive">{state.errors.email[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="address">Address (Optional)</Label>
-              <Input id="address" name="address" placeholder="e.g., 123 Main St" />
+              <Input id="address" name="address" placeholder="e.g., 12/A, B.C. Road, Kolkata" />
             </div>
           </div>
           <DialogFooter>
@@ -112,5 +112,3 @@ export function NewClientDialog({ open, onOpenChange, phone, onClientCreated }: 
     </Dialog>
   );
 }
-
-    

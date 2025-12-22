@@ -72,7 +72,7 @@ export function ClientForm() {
               <Input
                 id="name"
                 name="name"
-                placeholder="e.g., John Doe"
+                placeholder="e.g., Ramesh Kumar"
                 required
               />
                {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
@@ -83,7 +83,7 @@ export function ClientForm() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="e.g., john@acme.com"
+                placeholder="e.g., ramesh@example.com"
                 required
               />
               {state?.errors?.email && <p className="text-sm text-destructive">{state.errors.email[0]}</p>}
@@ -96,7 +96,7 @@ export function ClientForm() {
                 id="phone"
                 name="phone"
                 type="tel"
-                placeholder="e.g., 555-123-4567"
+                placeholder="e.g., +919876543210"
                 required
               />
               {state?.errors?.phone && <p className="text-sm text-destructive">{state.errors.phone[0]}</p>}
@@ -106,7 +106,7 @@ export function ClientForm() {
               <Input
                 id="address"
                 name="address"
-                placeholder="e.g., 123 Main St, Anytown, USA"
+                placeholder="e.g., 12/A, B.C. Road, Kolkata"
                 required
               />
               {state?.errors?.address && <p className="text-sm text-destructive">{state.errors.address[0]}</p>}

@@ -2,6 +2,25 @@
 
 This document explains how to interact with your Supabase database within this Next.js application.
 
+## Fixing "violates row-level security policy" Errors
+
+If you encounter an error like `new row violates row-level security policy for table "clients"`, it means your database security rules are blocking an action.
+
+**This is the most common issue and requires a manual fix in your Supabase dashboard.**
+
+For the customer portal OTP login to work, you must create a policy that allows anyone to create a new client profile when they use a new phone number.
+
+Go to the **Supabase Dashboard** -> **SQL Editor** -> **New query** and run the following command:
+
+```sql
+CREATE POLICY "Allow public insert for new clients"
+ON public.clients
+FOR INSERT
+WITH CHECK (true);
+```
+
+This will solve the error.
+
 ## Connecting to Supabase
 
 You do not use a direct SQL query to establish a connection to the database. The connection is managed automatically by the Supabase client library.
@@ -24,7 +43,7 @@ These functions use the `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANO
 
 ## How to Query Data
 
-Once you have a `supabase` client object, you can use its methods to query your tables. This is the standard way to interact with the database in this project. You do not need to write raw SQL.
+Once you have a `supabase` client object, you can use its methods to query your tables.
 
 ### Fetching All Records from a Table
 
@@ -38,19 +57,6 @@ if (error) {
 } else {
   console.log('Clients:', clients);
 }
-```
-
-### Fetching a Single Record
-
-To get a single client by their ID:
-
-```javascript
-const clientId = 'some-client-id';
-const { data: client, error } = await supabase
-  .from('clients')
-  .select('*')
-  .eq('id', clientId)
-  .single();
 ```
 
 ### Inserting a Record
@@ -69,22 +75,3 @@ const { data: newClient, error } = await supabase
   .select()
   .single();
 ```
-
-This method is safer and better integrated with the Next.js application than writing raw SQL queries.
-
-## Fixing "violates row-level security policy" Errors
-
-If you encounter an error like `new row violates row-level security policy for table "clients"`, it means your database security rules are blocking an action.
-
-For the customer portal OTP login to work, you need a policy that allows anyone to create a new client profile when they use a new phone number.
-
-Go to the **Supabase Dashboard** -> **SQL Editor** -> **New query** and run the following command to create the required policy:
-
-```sql
-CREATE POLICY "Allow public insert for new clients"
-ON public.clients
-FOR INSERT
-WITH CHECK (true);
-```
-
-This will solve the error.

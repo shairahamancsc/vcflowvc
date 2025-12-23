@@ -96,13 +96,14 @@ export async function summarizeAndCreateRequest(prevState: FormState, formData: 
 
 
 const clientSchema = z.object({
+    id: z.string().optional(),
     name: z.string().min(1, 'Name is required.'),
     email: z.string().email('Invalid email address.').optional().or(z.literal('')),
     phone: z.string().min(1, 'Phone is required.'),
     address: z.string().optional(),
 });
 
-export async function createClientAction(prevState: any, formData: FormData) {
+export async function upsertClientAction(prevState: any, formData: FormData) {
     const validatedFields = clientSchema.safeParse(Object.fromEntries(formData.entries()));
 
     if (!validatedFields.success) {
@@ -114,22 +115,36 @@ export async function createClientAction(prevState: any, formData: FormData) {
     }
 
     const supabase = createClient();
-    const clientData = {
-        ...validatedFields.data,
-        id: uuidv4(),
-        address: validatedFields.data.address || 'N/A',
-        email: validatedFields.data.email || `${validatedFields.data.phone}@example.com`
+    const { id, ...clientData } = validatedFields.data;
+    
+    const dataToUpsert = {
+        ...clientData,
+        address: clientData.address || 'N/A',
+        email: clientData.email || `${clientData.phone}@example.com`
     };
 
-    const { data: newClient, error } = await supabase.from('clients').insert(clientData).select().single();
-
-    if (error) {
-        return { success: false, message: error.message, errors: null };
+    if (id) {
+        // Update existing client
+        const { data: updatedClient, error } = await supabase.from('clients').update(dataToUpsert).eq('id', id).select().single();
+        if (error) {
+            return { success: false, message: error.message, errors: null };
+        }
+        revalidatePath('/clients');
+        revalidatePath(`/clients/${id}`);
+        revalidatePath(`/clients/${id}/edit`);
+        return { success: true, message: 'Client updated successfully', errors: null, client: updatedClient as Client };
+    } else {
+        // Create new client
+        const newClientData = { ...dataToUpsert, id: uuidv4() };
+        const { data: newClient, error } = await supabase.from('clients').insert(newClientData).select().single();
+        if (error) {
+            return { success: false, message: error.message, errors: null };
+        }
+        revalidatePath('/clients');
+        return { success: true, message: 'Client created successfully', errors: null, client: newClient as Client };
     }
-    
-    revalidatePath('/clients');
-    return { success: true, message: 'Client created successfully', errors: null, client: newClient as Client };
 }
+
 
 export async function deleteClientAction(clientId: string) {
     const supabase = createClient();
@@ -596,3 +611,4 @@ export async function createClientAndLoginAction(prevState: any, formData: FormD
 
     return { success: true, message: 'Account created and OTP sent successfully!', errors: null };
 }
+

@@ -83,7 +83,7 @@ export function ClientsTable({ clients: initialClients }: ClientsTableProps) {
                     <Link href={`/clients/${client.id}`}>View Client</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                     <Link href="#">Edit Client</Link>
+                     <Link href={`/clients/${client.id}/edit`}>Edit Client</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

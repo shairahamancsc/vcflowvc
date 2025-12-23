@@ -1,3 +1,4 @@
+
 # Firebase Studio
 
 This is a NextJS starter in Firebase Studio.
@@ -8,10 +9,10 @@ To get started, take a look at src/app/page.tsx.
 
 To log in as the administrator, you must first create the user account through the application's UI. The application code is configured to automatically grant admin privileges to a specific email address.
 
-1.  **Sign Up**: Navigate to `/users/new` to access the new user creation form.
+1.  **Sign Up**: Navigate to `/signup` to access the new user creation form.
 2.  **Use these credentials**:
     *   **Name**: `Admin User` (or any name you prefer)
-    *   **Email**: `shairahaman.csc@gmail.com`
+    *   **Email**: `shsirahaman.csc@gmail.com`
     *   **Password**: Choose a secure password (e.g., `password`)
     *   **Role**: You can select any role; the application will override it to `admin`.
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
@@ -33,7 +34,12 @@ function VerifyOtpButton() {
     );
 }
 
-const sendOtpInitialState = {
+const sendOtpInitialState: {
+    message: string;
+    success: boolean;
+    errors: any;
+    action?: 'redirect_to_signup';
+} = {
   message: '',
   success: false,
   errors: null,
@@ -65,6 +71,8 @@ export default function CustomerLoginPage() {
         description: 'Check your phone for the verification code.',
       });
       setOtpSent(true);
+    } else if (sendState.action === 'redirect_to_signup') {
+        router.push(`/clients/signup?phone=${encodeURIComponent(phone)}`);
     } else if (sendState.message) {
       toast({
         title: 'Error',
@@ -72,7 +80,7 @@ export default function CustomerLoginPage() {
         variant: 'destructive',
       });
     }
-  }, [sendState, toast]);
+  }, [sendState, toast, router, phone]);
 
   useEffect(() => {
     if (verifyState.success) {
@@ -112,7 +120,7 @@ export default function CustomerLoginPage() {
                         <Input 
                             id="phone" 
                             name="phone" 
-                            placeholder="e.g., +919876543210" 
+                            placeholder="e.g., +91 98765 43210" 
                             required 
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
@@ -125,6 +133,9 @@ export default function CustomerLoginPage() {
                 </CardContent>
                 <CardFooter className="flex-col gap-4">
                     <SendOtpButton />
+                     <p className="text-muted-foreground text-center text-xs">
+                        New here? We'll help you create an account.
+                    </p>
                 </CardFooter>
             </form>
         ) : (

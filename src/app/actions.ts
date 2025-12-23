@@ -1,3 +1,4 @@
+
 'use server';
 
 import { summarizeServiceRequest } from '@/ai/flows/summarize-service-request';
@@ -416,19 +417,10 @@ export async function sendOtpAction(prevState: any, formData: FormData) {
   const { phone } = validatedFields.data;
   const supabase = createClient();
 
-  // Ensure a client profile exists, or create one.
-  let { data: client } = await supabase.from('clients').select('id').eq('phone', phone).single();
+  const { data: client } = await supabase.from('clients').select('id').eq('phone', phone).single();
 
   if (!client) {
-    const { data: newClient, error: createError } = await supabase
-      .from('clients')
-      .insert({ phone: phone, name: `Client (${phone})`, email: `${phone}@placeholder.com`, address: 'N/A' })
-      .select('id').single();
-    
-    if (createError) {
-      return { success: false, message: `Could not create client profile: ${createError.message}`, errors: null };
-    }
-    client = newClient;
+    return { success: false, message: 'No account found with this phone number.', action: 'redirect_to_signup', errors: null };
   }
 
   const { error: otpError } = await supabase.auth.signInWithOtp({
@@ -474,7 +466,6 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
         return { success: false, message: 'Could not establish a session. Please try again.', errors: null };
     }
 
-    // Now that the user is authenticated via OTP, find their client profile
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('*')
@@ -485,7 +476,6 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
         return { success: false, message: 'Could not find a client profile for this phone number.', errors: null };
     }
 
-    // Set a cookie to manage client session
     cookies().set('client_id', client.id, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 }); // 24 hour session
     cookies().set('client_name', client.name, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
     cookies().set('client_phone', client.phone, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
@@ -555,4 +545,54 @@ export async function createRequestFromPortal(prevState: any, formData: FormData
     console.error('Portal request creation error:', error);
     return { message: 'Failed to submit request.', errors: { server: [error.message] } };
   }
+}
+
+const newClientSchema = z.object({
+    name: z.string().min(1, 'Name is required.'),
+    email: z.string().email('Invalid email address.').optional().or(z.literal('')),
+    phone: z.string().min(10, 'Phone is required.'),
+    address: z.string().optional(),
+});
+
+
+export async function createClientAndLoginAction(prevState: any, formData: FormData) {
+    const validatedFields = newClientSchema.safeParse(Object.fromEntries(formData.entries()));
+
+    if (!validatedFields.success) {
+        return {
+            success: false,
+            message: 'Validation failed',
+            errors: validatedFields.error.flatten().fieldErrors,
+        };
+    }
+
+    const supabase = createClient();
+    const { phone, name, email, address } = validatedFields.data;
+    
+    const clientData = {
+        id: uuidv4(),
+        phone,
+        name,
+        address: address || 'N/A',
+        email: email || `${phone}@example.com`
+    };
+
+    const { error: insertError } = await supabase.from('clients').insert(clientData);
+
+    if (insertError) {
+        // Handle case where phone number might already exist due to a race condition.
+        if (insertError.code === '23505') { // unique_violation
+            return { success: false, message: 'A client with this phone number already exists. Please try logging in.', errors: null };
+        }
+        return { success: false, message: insertError.message, errors: null };
+    }
+    
+    // After creating the client, send OTP
+    const { error: otpError } = await supabase.auth.signInWithOtp({ phone });
+
+    if (otpError) {
+        return { success: false, message: `Account created, but failed to send OTP: ${otpError.message}`, errors: null };
+    }
+
+    return { success: true, message: 'Account created and OTP sent successfully!', errors: null };
 }

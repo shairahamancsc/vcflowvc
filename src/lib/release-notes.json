@@ -2,6 +2,15 @@
 {
   "notes": [
     {
+      "version": "0.1.1",
+      "changes": [
+        "Fixed the 'What's New' popup to ensure it appears reliably on every version update.",
+        "Corrected placeholder text and formats to be more suitable for users in India.",
+        "Fixed a critical bug preventing new client accounts from being created via the customer portal.",
+        "Resolved several minor bugs and UI inconsistencies across the application."
+      ]
+    },
+    {
       "version": "0.1.0",
       "changes": [
         "Initial release of VC Flow!",

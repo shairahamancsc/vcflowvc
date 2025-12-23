@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { version } from '../../package.json';
+import { version } from '../../../package.json';
 import releaseNotes from '@/lib/release-notes.json';
 import {
   AlertDialog,
@@ -19,12 +19,10 @@ const LAST_SEEN_VERSION_KEY = 'lastSeenVersion';
 
 export function WhatsNew() {
   const [isOpen, setIsOpen] = useState(false);
-  const [lastSeenVersion, setLastSeenVersion] = useState<string | null>(null);
 
   useEffect(() => {
     // This code runs only on the client
     const storedVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
-    setLastSeenVersion(storedVersion);
 
     if (storedVersion !== version) {
       setIsOpen(true);

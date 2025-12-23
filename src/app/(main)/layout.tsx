@@ -11,7 +11,7 @@ import { WhatsNew } from '@/components/whats-new';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   useAuthRedirect({ to: '/login', when: 'loggedOut' });
-  const { user } = useAuth();
+  const { user, version } = useAuth();
 
   if (!user) {
     return <SplashScreen />;
@@ -19,7 +19,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
-      <WhatsNew />
+      <WhatsNew version={version} />
       <aside className="hidden w-64 flex-col border-r bg-background sm:flex lg:w-72">
         <SidebarNav />
       </aside>

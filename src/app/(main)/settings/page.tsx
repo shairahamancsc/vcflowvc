@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/hooks';
 import { Sun, Moon, Laptop, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { version } from '../../../../package.json';
 import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { updateProfileAction } from '@/app/actions';
@@ -30,7 +29,7 @@ function SubmitButton() {
 }
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, version } = useAuth();
   const { setTheme } = useTheme();
   const { toast } = useToast();
   const [state, formAction] = useActionState(updateProfileAction, initialState);

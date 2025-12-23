@@ -2,7 +2,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { version } from '../../../package.json';
 import releaseNotes from '@/lib/release-notes.json';
 import {
   AlertDialog,
@@ -17,7 +16,7 @@ import { Rocket } from 'lucide-react';
 
 const LAST_SEEN_VERSION_KEY = 'lastSeenVersion';
 
-export function WhatsNew() {
+export function WhatsNew({ version }: { version: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -27,7 +26,7 @@ export function WhatsNew() {
     if (storedVersion !== version) {
       setIsOpen(true);
     }
-  }, []);
+  }, [version]);
 
   const handleClose = () => {
     localStorage.setItem(LAST_SEEN_VERSION_KEY, version);

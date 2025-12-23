@@ -23,8 +23,8 @@ export function useAuthRedirect({ to, when }: { to: string, when: 'loggedIn' | '
     }
     
     if (when === 'loggedOut' && !user) {
-      // Check if current path is the customer portal root, if so, don't redirect
-      if (window.location.pathname === '/') return;
+      // Check if current path is the customer portal root or signup, if so, don't redirect
+      if (window.location.pathname === '/' || window.location.pathname.startsWith('/clients/signup')) return;
       router.push(to);
     }
   }, [user, loading, router, to, when]);

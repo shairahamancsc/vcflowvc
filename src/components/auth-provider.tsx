@@ -12,11 +12,12 @@ export interface AuthContextType {
   login: (email: string, pass: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
   loading: boolean;
+  version: string;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children, version }: { children: ReactNode, version: string }) {
   const supabase = createClient();
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -113,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, version }}>
       {children}
     </AuthContext.Provider>
   );

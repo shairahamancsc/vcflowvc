@@ -3,8 +3,8 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Define paths that are public and don't require any authentication
-const publicPaths = ['/login', '/signup'];
-const customerPaths = ['/', '/portal', '/api/client-logout'];
+const publicPaths = ['/login', '/signup', '/clients/signup'];
+const customerPaths = ['/', '/portal'];
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
@@ -14,13 +14,14 @@ export async function middleware(request: NextRequest) {
   });
 
   const { pathname } = request.nextUrl;
-  const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/_next/') || pathname.startsWith('/static/') || pathname.endsWith('favicon.ico');
-  const isCustomerPath = customerPaths.includes(pathname);
-
-  // If it's a public path that doesn't need any auth check, let it go.
-  if (isPublicPath) {
+  
+  // Allow Vercel-specific paths and static assets to pass through
+  if (pathname.startsWith('/_next/') || pathname.startsWith('/static/') || pathname.endsWith('.ico') || pathname.endsWith('.png') || pathname.endsWith('.svg')) {
     return response;
   }
+
+  const isPublicPath = publicPaths.includes(pathname);
+  const isCustomerPath = customerPaths.includes(pathname);
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -39,39 +40,49 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // Check for admin/technician session for non-public, non-customer paths
   const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!isCustomerPath) {
-    if (!session) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-    // If user is logged in but tries to access login page, redirect to dashboard
-    if (session && pathname === '/login') {
-       return NextResponse.redirect(new URL('/dashboard', request.url));
+  const clientId = request.cookies.get('client_id')?.value;
+
+  // If it's a public path, anyone can access it.
+  if (isPublicPath) {
+     // If a logged-in staff member tries to access a public auth page, redirect them to the dashboard
+    if (session && (pathname === '/login' || pathname === '/signup')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     return response;
   }
-
-  // Handle customer portal paths
+  
+  // Customer portal paths
   if (isCustomerPath) {
-    const clientId = request.cookies.get('client_id')?.value;
-    
-    // If trying to access portal without being logged in, redirect to customer login
     if (pathname.startsWith('/portal') && !clientId) {
+      // Not a logged-in customer, redirect to customer login
       return NextResponse.redirect(new URL('/', request.url));
     }
-    // If logged in as customer and trying to access root login, redirect to portal
     if (pathname === '/' && clientId) {
+      // Logged-in customer trying to access root, redirect to their portal
       return NextResponse.redirect(new URL('/portal', request.url));
     }
+    return response;
   }
   
+  // All other paths are considered protected staff/admin paths.
+  // If there's no staff session, redirect to the staff login page.
+  if (!session) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
   return response;
 }
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };

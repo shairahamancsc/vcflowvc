@@ -473,7 +473,7 @@ export async function sendOtpAction(prevState: any, formData: FormData) {
 }
 
 const verifyOtpSchema = z.object({
-    phone: z.string().min(1, 'Phone number is required.'), // Accept formatted number now
+    phone: z.string().min(1, 'Phone number is required.'),
     token: z.string().min(6, 'OTP must be 6 digits.').max(6, 'OTP must be 6 digits.'),
 });
 
@@ -487,10 +487,9 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
             errors: validatedFields.error.flatten().fieldErrors,
         };
     }
-    const phone = validatedFields.data.phone;
+    const phone = validatedFields.data.phone; // This will be the E.164 formatted number
     const token = validatedFields.data.token;
     
-    // Phone is already formatted from the client side
     const supabase = createClient();
 
     const { data, error: verifyError } = await supabase.auth.verifyOtp({

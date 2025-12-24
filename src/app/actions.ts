@@ -473,7 +473,7 @@ export async function sendOtpAction(prevState: any, formData: FormData) {
 }
 
 const verifyOtpSchema = z.object({
-    phone: z.string().regex(/^\d{10}$/, 'Phone number is invalid.'),
+    phone: z.string().min(1, 'Phone number is required.'), // Accept formatted number now
     token: z.string().min(6, 'OTP must be 6 digits.').max(6, 'OTP must be 6 digits.'),
 });
 
@@ -490,11 +490,11 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
     const phone = validatedFields.data.phone;
     const token = validatedFields.data.token;
     
-    const formattedPhone = formatPhoneNumber(phone);
+    // Phone is already formatted from the client side
     const supabase = createClient();
 
     const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        phone: formattedPhone,
+        phone: phone,
         token,
         type: 'sms',
     });
@@ -510,7 +510,7 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('*')
-      .eq('phone', formattedPhone)
+      .eq('phone', phone)
       .single();
 
     if (clientError || !client) {
@@ -636,7 +636,7 @@ export async function createClientAndLoginAction(prevState: any, formData: FormD
         return { success: false, message: `Account created, but failed to send OTP: ${otpError.message}`, errors: null };
     }
 
-    return { success: true, message: 'Account created and OTP sent successfully!', errors: null };
+    return { success: true, message: 'Account created and OTP sent successfully!', errors: null, formattedPhone };
 }
 
 const createClientActionSchema = z.object({

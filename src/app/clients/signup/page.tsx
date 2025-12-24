@@ -38,6 +38,7 @@ const createClientInitialState = {
   message: '',
   success: false,
   errors: null,
+  formattedPhone: undefined,
 };
 
 const verifyOtpInitialState = {
@@ -54,6 +55,7 @@ function ClientSignupForm() {
 
   const [otpSent, setOtpSent] = useState(false);
   const [phone, setPhone] = useState(phoneFromQuery);
+  const [formattedPhone, setFormattedPhone] = useState('');
 
   const [createState, createFormAction] = useActionState(createClientAndLoginAction, createClientInitialState);
   const [verifyState, verifyFormAction] = useActionState(verifyOtpAction, verifyOtpInitialState);
@@ -62,11 +64,12 @@ function ClientSignupForm() {
   const verifyFormRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (createState.success) {
+    if (createState.success && createState.formattedPhone) {
       toast({
         title: 'Account Created!',
         description: 'Check your phone for the verification code.',
       });
+      setFormattedPhone(createState.formattedPhone);
       setOtpSent(true);
     } else if (createState.message) {
       toast({
@@ -141,7 +144,7 @@ function ClientSignupForm() {
         ) : (
           <form ref={verifyFormRef} action={verifyFormAction}>
             <CardContent className="grid gap-4">
-              <input type="hidden" name="phone" value={phone} />
+              <input type="hidden" name="phone" value={formattedPhone} />
               <div className="space-y-2">
                 <Label htmlFor="token">Verification Code</Label>
                 <Input id="token" name="token" placeholder="123456" required />

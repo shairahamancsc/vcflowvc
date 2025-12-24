@@ -89,7 +89,7 @@ export default function CustomerLoginPage() {
         description: 'You are now logged in. Redirecting...',
       });
       verifyFormRef.current?.reset();
-      router.refresh();
+      router.push('/portal');
     } else if (verifyState.message) {
       toast({
         title: 'Error',

@@ -19,22 +19,25 @@ export function useAuthRedirect({ to, when }: { to: string, when: 'loggedIn' | '
   const pathname = usePathname();
 
   useEffect(() => {
-    // Only perform redirects once the auth state is fully resolved
-    if (loading) return;
+    // Don't perform any redirects until the auth state is fully resolved.
+    if (loading) {
+      return;
+    }
 
+    const isPublicPath = ['/login', '/signup', '/', '/clients/signup'].some(p => pathname.startsWith(p));
+    
+    // Redirect logged-in users away from public pages.
     if (when === 'loggedIn' && user) {
-      if(pathname !== to) {
-        router.push(to);
-      }
+       if (isPublicPath) {
+         router.push(to);
+       }
     }
     
+    // Redirect logged-out users away from protected pages.
     if (when === 'loggedOut' && !user) {
-       // A list of public paths that don't need redirection when logged out.
-      const publicPaths = ['/login', '/signup', '/', '/clients/signup'];
-      if (publicPaths.includes(pathname) || pathname.startsWith('/clients/signup')) {
-        return;
+      if (!isPublicPath) {
+        router.push(to);
       }
-      router.push(to);
     }
   }, [user, loading, router, to, when, pathname]);
 }

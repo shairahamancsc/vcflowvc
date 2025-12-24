@@ -99,7 +99,7 @@ const clientSchema = z.object({
     id: z.string().optional(),
     name: z.string().min(1, 'Name is required.'),
     email: z.string().email('Invalid email address.').optional().or(z.literal('')),
-    phone: z.string().min(1, 'Phone is required.'),
+    phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
     address: z.string().optional(),
 });
 
@@ -115,12 +115,14 @@ export async function upsertClientAction(prevState: any, formData: FormData) {
     }
 
     const supabase = createClient();
-    const { id, ...clientData } = validatedFields.data;
+    const { id, phone, ...clientData } = validatedFields.data;
+    const formattedPhone = formatPhoneNumber(phone);
     
     const dataToUpsert = {
         ...clientData,
+        phone: formattedPhone,
         address: clientData.address || 'N/A',
-        email: clientData.email || `${clientData.phone}@example.com`
+        email: clientData.email || `${formattedPhone}@example.com`
     };
 
     if (id) {
@@ -415,7 +417,7 @@ export async function signUpAction(prevState: any, formData: FormData) {
 }
 
 const sendOtpSchema = z.object({
-  phone: z.string().min(10, 'Please enter a valid phone number including country code.'),
+  phone: z.string().regex(/^\d{10}$/, 'Please enter a valid 10-digit phone number.'),
 });
 
 // Helper to format phone numbers to E.164
@@ -423,8 +425,8 @@ function formatPhoneNumber(phone: string): string {
   // Remove all non-digit characters
   const digitsOnly = phone.replace(/\D/g, '');
 
-  // If it's a 10-digit number (common for India), prefix with +91
-  if (digitsOnly.length === 10 && !phone.startsWith('+91')) {
+  // If it's a 10-digit number, prefix with +91
+  if (digitsOnly.length === 10) {
     return `+91${digitsOnly}`;
   }
 
@@ -433,8 +435,8 @@ function formatPhoneNumber(phone: string): string {
     return phone;
   }
   
-  // Fallback for other cases - this might still fail if format is incorrect
-  return phone;
+  // Fallback for other cases
+  return `+91${phone}`;
 }
 
 
@@ -471,7 +473,7 @@ export async function sendOtpAction(prevState: any, formData: FormData) {
 }
 
 const verifyOtpSchema = z.object({
-    phone: z.string(),
+    phone: z.string().regex(/^\d{10}$/, 'Phone number is invalid.'),
     token: z.string().min(6, 'OTP must be 6 digits.').max(6, 'OTP must be 6 digits.'),
 });
 
@@ -589,7 +591,7 @@ export async function createRequestFromPortal(prevState: any, formData: FormData
 const newClientSchema = z.object({
     name: z.string().min(1, 'Name is required.'),
     email: z.string().email('Invalid email address.').optional().or(z.literal('')),
-    phone: z.string().min(10, 'Phone is required.'),
+    phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
     address: z.string().optional(),
 });
 
@@ -640,7 +642,7 @@ export async function createClientAndLoginAction(prevState: any, formData: FormD
 const createClientActionSchema = z.object({
     name: z.string().min(1, 'Name is required.'),
     email: z.string().email('Invalid email address.').optional().or(z.literal('')),
-    phone: z.string().min(10, 'Phone is required.'),
+    phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
     address: z.string().optional(),
 });
 

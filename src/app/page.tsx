@@ -117,14 +117,20 @@ export default function CustomerLoginPage() {
                 <CardContent className="grid gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="phone">Phone Number</Label>
-                        <Input 
-                            id="phone" 
-                            name="phone" 
-                            placeholder="e.g., +91 98765 43210" 
-                            required 
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                        />
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-10 items-center justify-center rounded-md border border-input bg-background px-3 text-base font-medium text-muted-foreground">
+                            +91
+                          </span>
+                          <Input 
+                              id="phone" 
+                              name="phone" 
+                              placeholder="9876543210" 
+                              required 
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              className="text-base"
+                          />
+                        </div>
                         {sendState?.errors?.phone && <p className="text-sm text-destructive">{sendState.errors.phone[0]}</p>}
                     </div>
                     {sendState.message && !sendState.success && (

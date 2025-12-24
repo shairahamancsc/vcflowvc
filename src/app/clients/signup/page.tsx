@@ -112,7 +112,12 @@ function ClientSignupForm() {
             <CardContent className="grid gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" name="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                <div className="flex items-center gap-2">
+                  <span className="flex h-10 items-center justify-center rounded-md border border-input bg-background px-3 text-base font-medium text-muted-foreground">
+                    +91
+                  </span>
+                  <Input id="phone" name="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                </div>
                 {createState?.errors?.phone && <p className="text-sm text-destructive">{createState.errors.phone[0]}</p>}
               </div>
               <div className="space-y-2">

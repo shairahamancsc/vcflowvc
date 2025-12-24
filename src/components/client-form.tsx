@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
@@ -93,14 +94,19 @@ export function ClientForm({ client }: ClientFormProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                defaultValue={client?.phone}
-                placeholder="e.g., +919876543210"
-                required
-              />
+              <div className="flex items-center gap-2">
+                <span className="flex h-10 items-center justify-center rounded-md border border-input bg-background px-3 text-base font-medium text-muted-foreground">
+                  +91
+                </span>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  defaultValue={client?.phone?.replace('+91', '')}
+                  placeholder="9876543210"
+                  required
+                />
+              </div>
               {state?.errors?.phone && <p className="text-sm text-destructive">{state.errors.phone[0]}</p>}
             </div>
           </div>

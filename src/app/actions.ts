@@ -487,7 +487,7 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
             errors: validatedFields.error.flatten().fieldErrors,
         };
     }
-    const phone = validatedFields.data.phone; // This will be the E.164 formatted number
+    const phone = validatedFields.data.phone;
     const token = validatedFields.data.token;
     
     const supabase = createClient();

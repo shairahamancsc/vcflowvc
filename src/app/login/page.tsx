@@ -17,7 +17,7 @@ export default function AdminLoginPage() {
   useAuthRedirect({ to: '/dashboard', when: 'loggedIn' });
 
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, waitForUser } = useAuth();
   const router = useRouter();
   
   const [email, setEmail] = useState('');
@@ -46,6 +46,8 @@ export default function AdminLoginPage() {
         title: 'Login successful!',
         description: 'Redirecting to your dashboard.',
       });
+      // Wait for the user context to be updated before redirecting
+      await waitForUser();
       router.push('/dashboard');
     }
   };

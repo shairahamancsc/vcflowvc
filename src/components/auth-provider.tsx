@@ -13,6 +13,7 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   loading: boolean;
   version: string;
+  waitForUser: () => Promise<AppUser>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,6 +22,12 @@ export function AuthProvider({ children, version }: { children: ReactNode, versi
   const supabase = createClient();
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // A resolver for the waitForUser promise.
+  let resolveUserPromise: (user: AppUser) => void;
+  const userPromise = new Promise<AppUser>(resolve => {
+    resolveUserPromise = resolve;
+  });
 
   const getActiveUser = useCallback(async (sbUser: SupabaseUser | null): Promise<AppUser | null> => {
     if (!sbUser) {
@@ -67,6 +74,9 @@ export function AuthProvider({ children, version }: { children: ReactNode, versi
         const activeUser = await getActiveUser(session?.user ?? null);
         setUser(activeUser);
         setLoading(false);
+        if (activeUser) {
+          resolveUserPromise(activeUser);
+        }
     };
 
     // First, check for the initial session.
@@ -82,7 +92,7 @@ export function AuthProvider({ children, version }: { children: ReactNode, versi
         subscription?.unsubscribe();
       };
     });
-  }, [getActiveUser, supabase.auth]);
+  }, [getActiveUser, supabase.auth, resolveUserPromise]);
 
 
   const login = async (email: string, pass: string) => {
@@ -98,13 +108,16 @@ export function AuthProvider({ children, version }: { children: ReactNode, versi
     setUser(null);
     setLoading(false);
   };
+  
+  const waitForUser = () => user ? Promise.resolve(user) : userPromise;
 
-  if (loading) {
+
+  if (loading && !user) {
     return <SplashScreen />;
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, version }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, version, waitForUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -424,7 +424,7 @@ function formatPhoneNumber(phone: string): string {
   const digitsOnly = phone.replace(/\D/g, '');
 
   // If it's a 10-digit number (common for India), prefix with +91
-  if (digitsOnly.length === 10 && !digitsOnly.startsWith('+91')) {
+  if (digitsOnly.length === 10 && !phone.startsWith('+91')) {
     return `+91${digitsOnly}`;
   }
 
@@ -488,7 +488,6 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
     const phone = validatedFields.data.phone;
     const token = validatedFields.data.token;
     
-    // The phone number passed to this action should already be formatted.
     const formattedPhone = formatPhoneNumber(phone);
     const supabase = createClient();
 

@@ -487,8 +487,7 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
             errors: validatedFields.error.flatten().fieldErrors,
         };
     }
-    const phone = validatedFields.data.phone;
-    const token = validatedFields.data.token;
+    const { phone, token } = validatedFields.data;
     
     const supabase = createClient();
 
@@ -524,7 +523,7 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
     cookies().set('client_name', client.name, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
     cookies().set('client_phone', client.phone, { path: '/', httpOnly: true, maxAge: 60 * 60 * 24 });
 
-    revalidatePath('/');
+    revalidatePath('/portal');
     return { success: true, message: 'Login successful', errors: null };
 }
 
@@ -686,3 +685,5 @@ export async function createClientAction(prevState: any, formData: FormData) {
     revalidatePath('/clients');
     return { success: true, message: 'Client created successfully', errors: null, client: newClient as Client };
 }
+
+    

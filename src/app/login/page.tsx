@@ -28,6 +28,7 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError(null);
     const { error: loginError } = await login(email, password);
+    setLoading(false);
 
     if (loginError) {
       const errorMessage = loginError.message || 'An unexpected error occurred.';
@@ -38,7 +39,6 @@ export default function AdminLoginPage() {
         description: errorMessage,
         variant: 'destructive',
       });
-      setLoading(false);
     } else {
       toast({
         title: 'Login successful!',
@@ -103,3 +103,5 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+
+    

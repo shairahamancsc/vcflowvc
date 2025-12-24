@@ -4,6 +4,7 @@
 import { useContext, useEffect } from 'react';
 import { AuthContext, AuthContextType } from '@/components/auth-provider';
 import { useRouter, usePathname } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
@@ -13,31 +14,50 @@ export function useAuth(): AuthContextType {
   return context;
 }
 
+const staffPublicPaths = ['/login', '/signup'];
+const clientPublicPaths = ['/', '/clients/signup'];
+
 export function useAuthRedirect({ to, when }: { to: string, when: 'loggedIn' | 'loggedOut'}) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // Don't perform any redirects until the auth state is fully resolved.
+    // Don't do anything until authentication state is resolved
     if (loading) {
       return;
     }
 
-    const isPublicPath = ['/login', '/signup', '/', '/clients/signup'].some(p => pathname.startsWith(p));
+    const isStaffPath = !clientPublicPaths.includes(pathname) && !pathname.startsWith('/portal');
+    const isStaffPublicPath = staffPublicPaths.includes(pathname);
     
-    // Redirect logged-in users away from public pages.
-    if (when === 'loggedIn' && user) {
-       if (isPublicPath) {
-         router.push(to);
-       }
-    }
-    
-    // Redirect logged-out users away from protected pages.
-    if (when === 'loggedOut' && !user) {
-      if (!isPublicPath) {
+    const clientId = Cookies.get('client_id');
+    const isClientLoggedIn = !!clientId;
+    const isClientPublicPath = clientPublicPaths.includes(pathname);
+
+    if (when === 'loggedIn') {
+      // For staff
+      if (user && isStaffPublicPath) {
         router.push(to);
       }
+      // For clients
+      if (isClientLoggedIn && isClientPublicPath) {
+        router.push('/portal');
+      }
     }
+
+    if (when === 'loggedOut') {
+       // For staff
+       if (!user && isStaffPath && !isStaffPublicPath) {
+         router.push(to);
+       }
+       // For clients
+       if (!isClientLoggedIn && pathname.startsWith('/portal')) {
+         router.push('/');
+       }
+    }
+
   }, [user, loading, router, to, when, pathname]);
 }
+
+    

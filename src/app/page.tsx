@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { sendOtpAction, verifyOtpAction } from '@/app/actions';
 import { Logo } from '@/components/logo';
+import { useAuthRedirect } from '@/lib/hooks';
 
 function SendOtpButton() {
   const { pending } = useFormStatus();
@@ -52,6 +53,7 @@ const verifyOtpInitialState = {
 };
 
 export default function CustomerLoginPage() {
+  useAuthRedirect({ to: '/portal', when: 'loggedIn' });
   const { toast } = useToast();
   const router = useRouter();
   
@@ -89,7 +91,7 @@ export default function CustomerLoginPage() {
         description: 'You are now logged in. Redirecting...',
       });
       verifyFormRef.current?.reset();
-      router.push('/portal');
+      // The useAuthRedirect hook will handle redirecting to the portal.
     } else if (verifyState.message) {
       toast({
         title: 'Error',
@@ -182,3 +184,5 @@ export default function CustomerLoginPage() {
     </div>
   );
 }
+
+    

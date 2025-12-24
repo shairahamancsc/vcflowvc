@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClientAndLoginAction, verifyOtpAction } from '@/app/actions';
 import { Logo } from '@/components/logo';
+import { useAuthRedirect } from '@/lib/hooks';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -38,7 +39,7 @@ const createClientInitialState = {
   message: '',
   success: false,
   errors: null,
-  formattedPhone: undefined,
+  formattedPhone: null,
 };
 
 const verifyOtpInitialState = {
@@ -48,8 +49,8 @@ const verifyOtpInitialState = {
 };
 
 function ClientSignupForm() {
+  useAuthRedirect({ to: '/portal', when: 'loggedIn' });
   const { toast } = useToast();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const phoneFromQuery = searchParams.get('phone') || '';
 
@@ -87,7 +88,7 @@ function ClientSignupForm() {
         description: 'You are now logged in. Redirecting...',
       });
       verifyFormRef.current?.reset();
-      router.push('/portal'); // Redirect to portal after successful verification
+      // The useAuthRedirect hook will handle the redirect to /portal
     } else if (verifyState.message) {
       toast({
         title: 'Error',
@@ -95,7 +96,7 @@ function ClientSignupForm() {
         variant: 'destructive',
       });
     }
-  }, [verifyState, toast, router]);
+  }, [verifyState, toast]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
@@ -181,3 +182,5 @@ export default function NewClientSignupPage() {
         </Suspense>
     )
 }
+
+    

@@ -11,14 +11,12 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth, useAuthRedirect } from '@/lib/hooks';
-import { useRouter } from 'next/navigation';
 
 export default function AdminLoginPage() {
   useAuthRedirect({ to: '/dashboard', when: 'loggedIn' });
 
   const { toast } = useToast();
-  const { login, waitForUser } = useAuth();
-  const router = useRouter();
+  const { login } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,9 +44,7 @@ export default function AdminLoginPage() {
         title: 'Login successful!',
         description: 'Redirecting to your dashboard.',
       });
-      // Wait for the user context to be updated before redirecting
-      await waitForUser();
-      router.push('/dashboard');
+      // The useAuthRedirect hook will handle the redirect.
     }
   };
 

@@ -418,6 +418,26 @@ const sendOtpSchema = z.object({
   phone: z.string().min(10, 'Please enter a valid phone number including country code.'),
 });
 
+// Helper to format phone numbers to E.164
+function formatPhoneNumber(phone: string): string {
+  // Remove all non-digit characters
+  const digitsOnly = phone.replace(/\D/g, '');
+
+  // If it's a 10-digit number (common for India), prefix with +91
+  if (digitsOnly.length === 10) {
+    return `+91${digitsOnly}`;
+  }
+
+  // If it starts with a +, assume it's already in E.164 or similar format
+  if (phone.startsWith('+')) {
+    return phone;
+  }
+  
+  // Fallback for other cases - this might still fail if format is incorrect
+  return digitsOnly;
+}
+
+
 export async function sendOtpAction(prevState: any, formData: FormData) {
   const validatedFields = sendOtpSchema.safeParse(Object.fromEntries(formData.entries()));
 
@@ -429,17 +449,18 @@ export async function sendOtpAction(prevState: any, formData: FormData) {
     };
   }
 
-  const { phone } = validatedFields.data;
+  const rawPhone = validatedFields.data.phone;
+  const formattedPhone = formatPhoneNumber(rawPhone);
   const supabase = createClient();
 
-  const { data: client } = await supabase.from('clients').select('id').eq('phone', phone).single();
+  const { data: client } = await supabase.from('clients').select('id').eq('phone', formattedPhone).single();
 
   if (!client) {
     return { success: false, message: 'No account found with this phone number.', action: 'redirect_to_signup', errors: null };
   }
 
   const { error: otpError } = await supabase.auth.signInWithOtp({
-    phone,
+    phone: formattedPhone,
   });
 
   if (otpError) {
@@ -464,11 +485,13 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
             errors: validatedFields.error.flatten().fieldErrors,
         };
     }
-    const { phone, token } = validatedFields.data;
+    const rawPhone = validatedFields.data.phone;
+    const token = validatedFields.data.token;
+    const formattedPhone = formatPhoneNumber(rawPhone);
     const supabase = createClient();
 
     const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        phone,
+        phone: formattedPhone,
         token,
         type: 'sms',
     });
@@ -484,7 +507,7 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('*')
-      .eq('phone', phone)
+      .eq('phone', formattedPhone)
       .single();
 
     if (clientError || !client) {
@@ -582,14 +605,15 @@ export async function createClientAndLoginAction(prevState: any, formData: FormD
     }
 
     const supabase = createClient();
-    const { phone, name, email, address } = validatedFields.data;
+    const { phone: rawPhone, name, email, address } = validatedFields.data;
+    const formattedPhone = formatPhoneNumber(rawPhone);
     
     const clientData = {
         id: uuidv4(),
-        phone,
+        phone: formattedPhone,
         name,
         address: address || 'N/A',
-        email: email || `${phone}@example.com`
+        email: email || `${formattedPhone}@example.com`
     };
 
     const { error: insertError } = await supabase.from('clients').insert(clientData);
@@ -603,7 +627,7 @@ export async function createClientAndLoginAction(prevState: any, formData: FormD
     }
     
     // After creating the client, send OTP
-    const { error: otpError } = await supabase.auth.signInWithOtp({ phone });
+    const { error: otpError } = await supabase.auth.signInWithOtp({ phone: formattedPhone });
 
     if (otpError) {
         return { success: false, message: `Account created, but failed to send OTP: ${otpError.message}`, errors: null };
@@ -612,3 +636,46 @@ export async function createClientAndLoginAction(prevState: any, formData: FormD
     return { success: true, message: 'Account created and OTP sent successfully!', errors: null };
 }
 
+const createClientActionSchema = z.object({
+    name: z.string().min(1, 'Name is required.'),
+    email: z.string().email('Invalid email address.').optional().or(z.literal('')),
+    phone: z.string().min(10, 'Phone is required.'),
+    address: z.string().optional(),
+});
+
+export async function createClientAction(prevState: any, formData: FormData) {
+    const validatedFields = createClientActionSchema.safeParse(Object.fromEntries(formData.entries()));
+
+    if (!validatedFields.success) {
+        return {
+            success: false,
+            message: 'Validation failed',
+            errors: validatedFields.error.flatten().fieldErrors,
+            client: null,
+        };
+    }
+
+    const supabase = createClient();
+    const { phone: rawPhone, name, email, address } = validatedFields.data;
+    const formattedPhone = formatPhoneNumber(rawPhone);
+
+    const clientData = {
+        id: uuidv4(),
+        phone: formattedPhone,
+        name,
+        address: address || 'N/A',
+        email: email || `${formattedPhone}@example.com`
+    };
+
+    const { data: newClient, error: insertError } = await supabase.from('clients').insert(clientData).select().single();
+
+    if (insertError) {
+        if (insertError.code === '23505') { // unique_violation
+            return { success: false, message: 'A client with this phone number already exists.', errors: null, client: null };
+        }
+        return { success: false, message: insertError.message, errors: null, client: null };
+    }
+
+    revalidatePath('/clients');
+    return { success: true, message: 'Client created successfully', errors: null, client: newClient as Client };
+}

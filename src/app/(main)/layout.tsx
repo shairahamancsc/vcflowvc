@@ -10,9 +10,11 @@ import { SplashScreen } from '@/components/splash-screen';
 import { WhatsNew } from '@/components/whats-new';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
-  useAuthRedirect({ to: '/login', when: 'loggedOut' });
+  useAuthRedirect();
   const { user, version } = useAuth();
 
+  // Do not render the main layout until the user is authenticated.
+  // The useAuthRedirect hook will handle redirecting to login if necessary.
   if (!user) {
     return <SplashScreen />;
   }

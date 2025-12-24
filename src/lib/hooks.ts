@@ -31,24 +31,23 @@ export function useAuthRedirect() {
     const isStaffUser = !!user;
     const isClientLoggedIn = !!Cookies.get('client_id');
     
-    const isStaffPublicPath = staffPublicPaths.includes(pathname);
-    const isClientPublicPath = clientPublicPaths.includes(pathname) || pathname === '/';
+    const isStaffPath = pathname.startsWith('/dashboard') || pathname.startsWith('/requests') || pathname.startsWith('/clients') || pathname.startsWith('/users') || pathname.startsWith('/settings') || pathname.startsWith('/dealers') || pathname.startsWith('/notes');
     const isPortalPath = pathname.startsWith('/portal');
 
-    // Rule 1: Logged-in staff on a public staff page should be redirected to dashboard
-    if (isStaffUser && isStaffPublicPath) {
+    // Rule 1: Logged-in staff on a public staff page (like /login) should be redirected to dashboard
+    if (isStaffUser && staffPublicPaths.includes(pathname)) {
       router.push('/dashboard');
       return;
     }
 
     // Rule 2: Logged-in client on a public client page should be redirected to portal
-    if (isClientLoggedIn && isClientPublicPath) {
+    if (isClientLoggedIn && (clientPublicPaths.includes(pathname))) {
       router.push('/portal');
       return;
     }
 
     // Rule 3: Not-logged-in user trying to access a protected staff page
-    if (!isStaffUser && !isStaffPublicPath && !isClientPublicPath && !isPortalPath) {
+    if (!isStaffUser && isStaffPath) {
       router.push('/login');
       return;
     }

@@ -493,7 +493,7 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
     const supabase = createClient();
 
     const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        phone: phone,
+        phone,
         token,
         type: 'sms',
     });
@@ -502,17 +502,21 @@ export async function verifyOtpAction(prevState: any, formData: FormData) {
         return { success: false, message: `Verification failed: ${verifyError.message}`, errors: null };
     }
 
-    if (!data.session) {
+    if (!data.user || !data.user.phone) {
         return { success: false, message: 'Could not establish a session. Please try again.', errors: null };
     }
+
+    // Use the phone number from the successfully authenticated user session
+    const verifiedPhone = data.user.phone;
 
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('*')
-      .eq('phone', phone)
+      .eq('phone', verifiedPhone)
       .single();
 
     if (clientError || !client) {
+        console.error("Client lookup error after OTP verification:", clientError)
         return { success: false, message: 'Could not find a client profile for this phone number.', errors: null };
     }
 

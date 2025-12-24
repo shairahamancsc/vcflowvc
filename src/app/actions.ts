@@ -603,6 +603,7 @@ export async function createClientAndLoginAction(prevState: any, formData: FormD
             success: false,
             message: 'Validation failed',
             errors: validatedFields.error.flatten().fieldErrors,
+            formattedPhone: null,
         };
     }
 
@@ -623,16 +624,16 @@ export async function createClientAndLoginAction(prevState: any, formData: FormD
     if (insertError) {
         // Handle case where phone number might already exist due to a race condition.
         if (insertError.code === '23505') { // unique_violation
-            return { success: false, message: 'A client with this phone number already exists. Please try logging in.', errors: null };
+            return { success: false, message: 'A client with this phone number already exists. Please try logging in.', errors: null, formattedPhone: null };
         }
-        return { success: false, message: insertError.message, errors: null };
+        return { success: false, message: insertError.message, errors: null, formattedPhone: null };
     }
     
     // After creating the client, send OTP
     const { error: otpError } = await supabase.auth.signInWithOtp({ phone: formattedPhone });
 
     if (otpError) {
-        return { success: false, message: `Account created, but failed to send OTP: ${otpError.message}`, errors: null };
+        return { success: false, message: `Account created, but failed to send OTP: ${otpError.message}`, errors: null, formattedPhone: null };
     }
 
     return { success: true, message: 'Account created and OTP sent successfully!', errors: null, formattedPhone };

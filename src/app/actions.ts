@@ -424,7 +424,7 @@ function formatPhoneNumber(phone: string): string {
   const digitsOnly = phone.replace(/\D/g, '');
 
   // If it's a 10-digit number (common for India), prefix with +91
-  if (digitsOnly.length === 10) {
+  if (digitsOnly.length === 10 && !digitsOnly.startsWith('+')) {
     return `+91${digitsOnly}`;
   }
 
@@ -434,7 +434,7 @@ function formatPhoneNumber(phone: string): string {
   }
   
   // Fallback for other cases - this might still fail if format is incorrect
-  return digitsOnly;
+  return phone;
 }
 
 

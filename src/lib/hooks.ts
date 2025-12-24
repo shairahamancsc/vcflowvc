@@ -1,7 +1,9 @@
 
+'use client';
+
 import { useContext, useEffect } from 'react';
 import { AuthContext, AuthContextType } from '@/components/auth-provider';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
@@ -14,18 +16,25 @@ export function useAuth(): AuthContextType {
 export function useAuthRedirect({ to, when }: { to: string, when: 'loggedIn' | 'loggedOut'}) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
+    // Only perform redirects once the auth state is fully resolved
     if (loading) return;
 
     if (when === 'loggedIn' && user) {
-      router.push(to);
+      if(pathname !== to) {
+        router.push(to);
+      }
     }
     
     if (when === 'loggedOut' && !user) {
-      // Check if current path is the customer portal root or signup, if so, don't redirect
-      if (window.location.pathname === '/' || window.location.pathname.startsWith('/clients/signup')) return;
+       // A list of public paths that don't need redirection when logged out.
+      const publicPaths = ['/login', '/signup', '/', '/clients/signup'];
+      if (publicPaths.includes(pathname) || pathname.startsWith('/clients/signup')) {
+        return;
+      }
       router.push(to);
     }
-  }, [user, loading, router, to, when]);
+  }, [user, loading, router, to, when, pathname]);
 }

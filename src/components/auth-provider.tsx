@@ -5,7 +5,7 @@ import { createContext, useState, useEffect, ReactNode, useCallback } from 'reac
 import type { User as AppUser } from '@/lib/types';
 import { SplashScreen } from './splash-screen';
 import { createClient } from '@/lib/supabase/client';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export interface AuthContextType {
   user: AppUser | null;
@@ -63,42 +63,32 @@ export function AuthProvider({ children, version }: { children: ReactNode, versi
   }, [supabase]);
 
   useEffect(() => {
-    let isMounted = true;
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (isMounted) {
-          const activeUser = await getActiveUser(session?.user ?? null);
-          setUser(activeUser);
-          setLoading(false);
-        }
-      }
-    );
-    
-    const checkInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (isMounted) {
-        if (session) {
-          const activeUser = await getActiveUser(session.user);
-          setUser(activeUser);
-        }
-        setLoading(false); // Ensure loading is false even if there's no session
-      }
+    const processSession = async (session: Session | null) => {
+        const activeUser = await getActiveUser(session?.user ?? null);
+        setUser(activeUser);
+        setLoading(false);
     };
 
-    checkInitialSession();
+    // First, check for the initial session.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      processSession(session);
 
-    return () => {
-      isMounted = false;
-      subscription?.unsubscribe();
-    };
+      // Then, set up the auth state change listener.
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          processSession(session);
+      });
+
+      return () => {
+        subscription?.unsubscribe();
+      };
+    });
   }, [getActiveUser, supabase.auth]);
 
 
   const login = async (email: string, pass: string) => {
     setLoading(true);
     const result = await supabase.auth.signInWithPassword({ email, password: pass });
-    setLoading(false);
+    // The onAuthStateChange listener will handle setting the user and loading state.
     return result;
   };
   
